@@ -14,9 +14,10 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# ─── WARM PROFESSIONAL COLOR PALETTE (Brown/Earthy Tone) ─────────────────────
+# ─── WARM PROFESSIONAL BROWN/EARTHY PALETTE ───────────────────────────────────
 BG_COLOR = "#f9f7f2"                    # Soft warm cream
 SIDEBAR_BG = "#f4f1ea"                  # Light warm beige
+
 HERO_GRADIENT = "linear-gradient(135deg, #5c4633 0%, #8c6b5e 50%, #b89e7e 100%)"
 
 PHASES = [
@@ -42,7 +43,7 @@ UPLOAD_DIR = DATA_DIR / "uploads"
 DATA_DIR.mkdir(exist_ok=True)
 UPLOAD_DIR.mkdir(exist_ok=True)
 
-# ─── STYLES - Clean Professional (No Purple Highlights) ───────────────────────
+# ─── STYLES - Removed All Violet/Purple ───────────────────────────────────────
 st.markdown(f"""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600&display=swap');
@@ -63,23 +64,27 @@ section[data-testid="stSidebar"] * {{
     background: {BG_COLOR}; 
 }}
 
-h1, h2, h3, h4, label, .stMarkdown, p, span {{
-    color: #3f2a1e !important;
-}}
-
-/* Remove purple highlight from input fields */
+/* Fix for all form elements - Warm beige instead of purple */
 .stTextInput > div > div > input,
 .stSelectbox > div > div > div,
 .stNumberInput > div > div > input,
 .stTextArea > div > div > textarea,
-.stFileUploader > div {{
-    background-color: #f5f2eb !important;   /* Warm beige - matches brown theme */
+.stMultiselect > div > div,
+.stFileUploader > div > div > div {{
+    background-color: #f5f2eb !important;   /* Warm beige matching brown theme */
     color: #3f2a1e !important;
     border: 1px solid #d4c4b0 !important;
     border-radius: 8px;
+    box-shadow: none !important;
 }}
 
-.stForm label, .stForm h3, .stForm subheader {{
+/* File uploader specific fix */
+.stFileUploader > div {{
+    background-color: #f5f2eb !important;
+    border: 1px dashed #b89e7e !important;
+}}
+
+.stForm label, .stForm h3, .stForm .stMarkdown {{
     color: #3f2a1e !important;
     font-weight: 500;
 }}
@@ -111,14 +116,6 @@ h1, h2, h3, h4, label, .stMarkdown, p, span {{
     box-shadow: 0 5px 18px rgba(0,0,0,0.05);
 }}
 
-.stat-box {{
-    border-radius: 20px; 
-    padding: 1.8rem 1.2rem; 
-    text-align: center; 
-    color: white;
-    box-shadow: 0 6px 22px rgba(0,0,0,0.07);
-}}
-
 .sidebar-logo {{
     font-family:'Playfair Display',serif; 
     font-size:2.1rem; 
@@ -129,7 +126,7 @@ h1, h2, h3, h4, label, .stMarkdown, p, span {{
 </style>
 """, unsafe_allow_html=True)
 
-# ─── HELPERS (unchanged) ──────────────────────────────────────────────────────
+# ─── HELPERS ──────────────────────────────────────────────────────────────────
 def load_projects():
     if PROJ_FILE.exists():
         with open(PROJ_FILE) as f:
@@ -155,6 +152,7 @@ def get_thumbnail(proj_dir: Path):
                         return f
     return None
 
+# Simple export functions
 def export_excel(proj):
     try:
         import openpyxl
@@ -371,11 +369,11 @@ elif page == "➕ Add New Project":
             st.success(f"✅ Project **{name}** saved successfully with {total_files} files!")
             st.balloons()
 
-# Statistics page (minimal version)
+# Statistics (basic)
 elif page == "📊 Statistics":
     st.markdown(f"""
     <div class="hero-header">
         <h1>📊 Studio Statistics</h1>
         <p>Overview of your interior design practice</p>
     </div>""", unsafe_allow_html=True)
-    st.info("Statistics page will be fully added once the Add New Project section looks perfect.")
+    st.info("Statistics section will be expanded soon.")
