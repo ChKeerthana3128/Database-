@@ -135,7 +135,7 @@ section[data-testid="stSidebar"] .stMarkdown p {{
 }}
 [data-testid="stFileUploadDropzone"]:hover {{
     background: #fff8ee !important;
-    border-color: {ACCENT_ROSE} !important;
+    border-color: {ACCENT_TERRA} !important;
 }}
 
 /* ── Submit Button ── */
@@ -901,7 +901,7 @@ elif page == "📊  Statistics":
                         ">
                             <div style="
                                 width:38px; height:{bar_h}px;
-                                background:linear-gradient(180deg,{ACCENT_GOLD},{ACCENT_ROSE});
+                                background:linear-gradient(180deg,{ACCENT_GOLD},{ACCENT_TERRA});
                                 border-radius:6px 6px 0 0;
                                 position:relative;
                             ">
