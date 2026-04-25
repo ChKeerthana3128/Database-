@@ -21,31 +21,31 @@ SIDEBAR_TEXT      = "#e8ded0"          # warm ivory text
 HERO_GRADIENT     = "linear-gradient(135deg, #0d1f1c 0%, #1a3a34 45%, #2a5a50 100%)"
 CARD_BG           = "#ffffff"
 ACCENT_GOLD       = "#c9a96e"          # warm gold
-ACCENT_ROSE       = "#c96e6e"          # muted rose
+ACCENT_TERRA      = "#b87355"          # terracotta
 ACCENT_SAGE       = "#6e9e8a"          # sage green
-ACCENT_PLUM       = "#7a6e9e"          # dusty plum
-ACCENT_SLATE      = "#6e8a9e"          # slate blue
+ACCENT_SAND       = "#c4a882"          # warm sand
+ACCENT_MOCHA      = "#8c6e56"          # mocha brown
 TEXT_DARK         = "#1a1a1a"
 TEXT_MID          = "#4a4a4a"
 TEXT_LIGHT        = "#7a7a7a"
 BORDER_COLOR      = "#ddd6c8"
 
 PHASES = [
-    {"key": "phase1", "label": "Phase 1 — Site Visit & CAD Drafting",        "color": ACCENT_ROSE,  "icon": "📍"},
+    {"key": "phase1", "label": "Phase 1 — Site Visit & CAD Drafting",        "color": ACCENT_TERRA, "icon": "📍"},
     {"key": "phase2", "label": "Phase 2 — Finalising Services & Kitchen",     "color": ACCENT_SAGE,  "icon": "🔧"},
-    {"key": "phase3", "label": "Phase 3 — 2D & 3D Designs",                  "color": ACCENT_PLUM,  "icon": "🎨"},
+    {"key": "phase3", "label": "Phase 3 — 2D & 3D Designs",                  "color": ACCENT_MOCHA, "icon": "🎨"},
     {"key": "phase4", "label": "Phase 4 — Working Drawings & Selections",     "color": ACCENT_GOLD,  "icon": "📐"},
 ]
 
 STATUS_META = {
-    "Completed":          {"color": ACCENT_SAGE,  "bg": "#e8f5ef", "dot": "🟢"},
-    "In Progress":        {"color": ACCENT_GOLD,  "bg": "#fdf4e3", "dot": "🟡"},
-    "Concept / Proposal": {"color": ACCENT_PLUM,  "bg": "#eeecf7", "dot": "🔵"},
-    "On Hold":            {"color": ACCENT_SLATE, "bg": "#e8eef5", "dot": "⚪"},
+    "Completed":          {"color": ACCENT_SAGE,  "bg": "#eef5f1", "dot": "🟢"},
+    "In Progress":        {"color": ACCENT_GOLD,  "bg": "#fdf6e8", "dot": "🟡"},
+    "Concept / Proposal": {"color": ACCENT_TERRA, "bg": "#faf0eb", "dot": "🟠"},
+    "On Hold":            {"color": ACCENT_MOCHA, "bg": "#f5f0eb", "dot": "⚪"},
 }
 
-TYPE_COLORS = [ACCENT_GOLD, ACCENT_SAGE, ACCENT_PLUM, ACCENT_ROSE, ACCENT_SLATE,
-               "#b5835a", "#5a9e8a", "#9e5a7a"]
+TYPE_COLORS = [ACCENT_GOLD, ACCENT_SAGE, ACCENT_TERRA, ACCENT_SAND, ACCENT_MOCHA,
+               "#b5835a", "#5a9e8a", "#a07850"]
 
 # ─── PATHS ────────────────────────────────────────────────────────────────────
 DATA_DIR  = Path("data")
@@ -171,6 +171,74 @@ section[data-testid="stSidebar"] .stMarkdown p {{
     padding: 1rem;
     border: 1px solid {BORDER_COLOR};
     box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+}}
+
+/* ── Kill ALL Streamlit purple/violet everywhere ── */
+:root {{
+    --primary-color: {ACCENT_GOLD} !important;
+}}
+
+/* Radio buttons — dot + ring */
+.stRadio > div > label > div:first-child {{
+    border-color: {ACCENT_GOLD} !important;
+    background: transparent !important;
+}}
+.stRadio > div > label[data-baseweb="radio"] > div:first-child > div {{
+    background: {ACCENT_GOLD} !important;
+}}
+[data-baseweb="radio"] [data-checked="true"] > div {{
+    background: {ACCENT_GOLD} !important;
+    border-color: {ACCENT_GOLD} !important;
+}}
+[data-baseweb="radio"]:focus-within > label > div:first-child {{
+    box-shadow: 0 0 0 3px rgba(201,169,110,0.25) !important;
+}}
+
+/* File uploader — nuke purple background */
+[data-testid="stFileUploader"] {{
+    background: transparent !important;
+}}
+[data-testid="stFileUploadDropzone"] {{
+    background: #faf8f2 !important;
+    border: 2px dashed #c9a96e !important;
+    border-radius: 12px !important;
+    color: #4a4a4a !important;
+}}
+[data-testid="stFileUploadDropzone"]:hover {{
+    background: #fff8ee !important;
+    border-color: #b87355 !important;
+}}
+[data-testid="stFileUploadDropzone"] * {{
+    color: #4a4a4a !important;
+}}
+/* The inner wrapper that Streamlit gives a purple tint */
+.stFileUploader > div > div,
+.stFileUploader > div {{
+    background: transparent !important;
+    border: none !important;
+}}
+
+/* Checkbox */
+[data-baseweb="checkbox"] > div {{
+    background: {ACCENT_GOLD} !important;
+    border-color: {ACCENT_GOLD} !important;
+}}
+
+/* Progress / spinner */
+.stProgress > div > div {{
+    background: {ACCENT_GOLD} !important;
+}}
+
+/* Multiselect tags */
+[data-baseweb="tag"] {{
+    background: #f5f0e8 !important;
+    color: #4a4a4a !important;
+    border: 1px solid #c9a96e !important;
+}}
+
+/* Active page highlight in sidebar radio */
+section[data-testid="stSidebar"] [data-baseweb="radio"] [data-checked="true"] > div {{
+    background: {ACCENT_GOLD} !important;
 }}
 
 /* ── Custom scrollbar ── */
@@ -510,8 +578,8 @@ with st.sidebar:
         <div>📁 <b style="color:{SIDEBAR_TEXT};">{len(projects)}</b> total projects</div>
         <div>✅ <b style="color:{ACCENT_SAGE};">{completed}</b> completed</div>
         <div>🔄 <b style="color:{ACCENT_GOLD};">{active}</b> in progress</div>
-        <div>💡 <b style="color:{ACCENT_PLUM};">{concepts}</b> concepts</div>
-        <div>⏸️ <b style="color:{ACCENT_SLATE};">{on_hold}</b> on hold</div>
+        <div>💡 <b style="color:{ACCENT_TERRA};">{concepts}</b> concepts</div>
+        <div>⏸️ <b style="color:{ACCENT_SAND};">{on_hold}</b> on hold</div>
     </div>
     """, unsafe_allow_html=True)
 
