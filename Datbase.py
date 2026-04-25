@@ -489,7 +489,6 @@ def render_project_detail(proj):
                 # Separate images from other files
                 images = [f for f in files if f.suffix.lower() in IMAGE_EXTS]
                 videos = [f for f in files if f.suffix.lower() in VIDEO_EXTS]
-                others = [f for f in files if f.suffix.lower() not in IMAGE_EXTS | VIDEO_EXTS]
 
                 with st.container():
                     st.markdown(f"""
@@ -539,39 +538,6 @@ def render_project_detail(proj):
                                     mime="video/mp4",
                                     key=f"dl_{proj['id']}_{ph['key']}_{vf.name}"
                                 )
-
-                    # ── Other Files ──
-                    if others:
-                        st.markdown(f"<p style='font-size:0.82rem; font-weight:600; color:{TEXT_MID}; margin:0.8rem 0 0.4rem;'>📎 Other Files</p>", unsafe_allow_html=True)
-                        for of in others:
-                            size_kb = round(of.stat().st_size / 1024, 1)
-                            size_str = f"{size_kb} KB" if size_kb < 1024 else f"{round(size_kb/1024,1)} MB"
-                            fc1, fc2 = st.columns([3, 1])
-                            with fc1:
-                                st.markdown(f"""
-                                <div style="
-                                    display:flex; align-items:center; gap:10px;
-                                    padding:8px 12px;
-                                    background:#faf8f2; border-radius:8px;
-                                    border:1px solid {BORDER_COLOR};
-                                    margin-bottom:6px;
-                                ">
-                                    <span style="font-size:1.4rem;">{file_icon(of.name)}</span>
-                                    <div>
-                                        <div style="font-size:0.88rem; font-weight:500; color:{TEXT_DARK};">{of.name}</div>
-                                        <div style="font-size:0.75rem; color:{TEXT_LIGHT};">{size_str}</div>
-                                    </div>
-                                </div>
-                                """, unsafe_allow_html=True)
-                            with fc2:
-                                with open(of, "rb") as fh:
-                                    st.download_button(
-                                        "⬇️ Download",
-                                        fh.read(),
-                                        file_name=of.name,
-                                        key=f"dl_{proj['id']}_{ph['key']}_{of.name}",
-                                        use_container_width=True
-                                    )
 
                     st.markdown("</div>", unsafe_allow_html=True)
 
