@@ -14,25 +14,29 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# ─── PASTEL COLORS ────────────────────────────────────────────────────────────
-PASTEL_BG = "#f8f4f9"
-PASTEL_ACCENT = "#d4a5d9"
+# ─── CONTEMPORARY COLOR PALETTE 2026 ──────────────────────────────────────────
+BG_COLOR = "#f8f5f0"           # Warm greige / light beige (modern neutral)
+SIDEBAR_COLOR = "#1f2a2f"      # Deep charcoal-teal
+ACCENT_TERRACOTTA = "#e07a5f"
+ACCENT_TEAL = "#2a9d8f"
+ACCENT_PLUM = "#6d4c8c"
+ACCENT_BEIGE = "#d4b99f"
 
 PHASES = [
-    {"key": "phase1", "label": "Phase 1 — Site Visit & CAD Drafting", "color": "#f8a5b8", "icon": "📍"},
-    {"key": "phase2", "label": "Phase 2 — Finalising Services & Kitchen", "color": "#f9d38a", "icon": "🔧"},
-    {"key": "phase3", "label": "Phase 3 — 2D & 3D Designs", "color": "#a2d2e2", "icon": "🎨"},
-    {"key": "phase4", "label": "Phase 4 — Working Drawings & Selections", "color": "#a8e6cf", "icon": "📐"},
+    {"key": "phase1", "label": "Phase 1 — Site Visit & CAD Drafting", "color": "#e07a5f", "icon": "📍"},   # Terracotta
+    {"key": "phase2", "label": "Phase 2 — Finalising Services & Kitchen", "color": "#2a9d8f", "icon": "🔧"}, # Teal
+    {"key": "phase3", "label": "Phase 3 — 2D & 3D Designs", "color": "#6d4c8c", "icon": "🎨"},            # Plum
+    {"key": "phase4", "label": "Phase 4 — Working Drawings & Selections", "color": "#d4b99f", "icon": "📐"}, # Warm beige
 ]
 
 STATUS_COLORS = {
-    "Completed": "#7ed6b3",
-    "In Progress": "#f9c96b",
-    "Concept / Proposal": "#c4a7e7",
-    "On Hold": "#f8a5b8",
+    "Completed": "#2a9d8f",      # Teal (fresh & successful)
+    "In Progress": "#e07a5f",    # Terracotta (energetic)
+    "Concept / Proposal": "#6d4c8c",  # Plum (creative)
+    "On Hold": "#8c6b5e",        # Warm muted brown
 }
 
-TYPE_COLORS = ["#f8a5b8", "#f9d38a", "#a2d2e2", "#a8e6cf", "#d4a5d9", "#f9c4a8", "#b8e0d2", "#e6c3f0"]
+TYPE_COLORS = ["#e07a5f", "#2a9d8f", "#6d4c8c", "#d4b99f", "#9c6644", "#4a7c59", "#7d5a9e", "#b38b6d"]
 
 # ─── PATHS ────────────────────────────────────────────────────────────────────
 DATA_DIR = Path("data")
@@ -41,26 +45,80 @@ UPLOAD_DIR = DATA_DIR / "uploads"
 DATA_DIR.mkdir(exist_ok=True)
 UPLOAD_DIR.mkdir(exist_ok=True)
 
-# ─── STYLES (Beautiful Pastel) ────────────────────────────────────────────────
+# ─── MODERN STYLES ────────────────────────────────────────────────────────────
 st.markdown(f"""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Nunito:wght@300;400;500;600&display=swap');
-html, body, [class*="css"] {{ font-family: 'Nunito', sans-serif; }}
-section[data-testid="stSidebar"] {{ background: linear-gradient(180deg, #e8d9f0 0%, #d4c4e8 100%); }}
-section[data-testid="stSidebar"] * {{ color: #4a2c6d !important; }}
-.main {{ background: {PASTEL_BG}; }}
-h1,h2,h3 {{ font-family: 'Playfair Display', serif !important; color: #4a2c6d; }}
-.proj-page {{ background: white; border-radius: 20px; padding: 2rem; box-shadow: 0 8px 25px rgba(0,0,0,0.06); margin-bottom: 2rem; border-top: 7px solid; }}
-.phase-card {{ border-radius: 16px; padding: 1.1rem 1.3rem; margin-bottom: 0.8rem; border-left: 6px solid; background: white; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }}
-.stat-box {{ border-radius: 18px; padding: 1.6rem; text-align: center; color: white; box-shadow: 0 6px 20px rgba(0,0,0,0.08); }}
-.hero-header {{ background: linear-gradient(135deg, #d4a5d9 0%, #f8c1d4 50%, #a8e6cf 100%); color: white; padding: 2.2rem 2.8rem; border-radius: 22px; margin-bottom: 2rem; }}
-.hero-header h1 {{ color: white !important; margin:0; font-size:2.4rem; }}
-.tag {{ display:inline-block; border-radius:25px; padding:4px 14px; font-size:0.8rem; margin:3px; font-weight:600; color:white; }}
-.sidebar-logo {{ font-family:'Playfair Display',serif; font-size:1.8rem; font-weight:700; color:#4a2c6d; }}
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600&display=swap');
+
+html, body, [class*="css"] {{ 
+    font-family: 'Inter', sans-serif; 
+}}
+section[data-testid="stSidebar"] {{
+    background: linear-gradient(180deg, #1f2a2f 0%, #162023 100%);
+}}
+section[data-testid="stSidebar"] * {{ color: #e8e3d9 !important; }}
+
+.main {{ 
+    background: {BG_COLOR}; 
+}}
+
+h1, h2, h3 {{ 
+    font-family: 'Playfair Display', serif !important; 
+    color: #1f2a2f;
+    font-weight: 700;
+}}
+
+.proj-page {{
+    background: white; 
+    border-radius: 20px; 
+    padding: 2.2rem; 
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08); 
+    margin-bottom: 2.2rem;
+    border-top: 8px solid;
+}}
+
+.phase-card {{
+    border-radius: 16px; 
+    padding: 1.2rem 1.4rem; 
+    margin-bottom: 1rem;
+    border-left: 7px solid; 
+    background: white;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.07);
+}}
+
+.stat-box {{
+    border-radius: 18px; 
+    padding: 1.8rem 1.2rem; 
+    text-align: center; 
+    color: white;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+}}
+
+.hero-header {{
+    background: linear-gradient(135deg, #1f2a2f 0%, #2a3a3f 40%, #6d4c8c 100%);
+    color: white; 
+    padding: 2.5rem 3rem; 
+    border-radius: 24px; 
+    margin-bottom: 2.5rem;
+}}
+.hero-header h1 {{ color: white !important; margin:0; font-size:2.6rem; }}
+
+.tag {{
+    display:inline-block; border-radius:25px; padding:5px 15px;
+    font-size:0.82rem; margin:4px; font-weight:600; color:white;
+}}
+
+.sidebar-logo {{
+    font-family:'Playfair Display',serif; 
+    font-size:1.95rem; 
+    font-weight:700; 
+    color:#e8e3d9; 
+    letter-spacing:0.04em;
+}}
 </style>
 """, unsafe_allow_html=True)
 
-# ─── HELPERS (same as your original) ──────────────────────────────────────────
+# ─── HELPERS (unchanged from your original) ───────────────────────────────────
 def load_projects():
     if PROJ_FILE.exists():
         with open(PROJ_FILE) as f:
@@ -73,7 +131,10 @@ def save_projects(projects):
 
 def file_icon(name):
     ext = Path(name).suffix.lower()
-    m = {".dwg":"📐",".jpg":"🖼️",".png":"🖼️",".pdf":"📄",".mp4":"🎬",".obj":"🧊",".zip":"🗜️", ".xlsx":"📊"}
+    m = {
+        ".dwg":"📐",".dxf":"📐",".rvt":"📐",".jpg":"🖼️",".png":"🖼️",".pdf":"📄",
+        ".mp4":"🎬",".obj":"🧊",".zip":"🗜️",".xlsx":"📊"
+    }
     return m.get(ext, "📎")
 
 def get_thumbnail(proj_dir: Path):
@@ -86,14 +147,12 @@ def get_thumbnail(proj_dir: Path):
                         return f
     return None
 
-# Export functions (export_excel, export_docx, export_html_report) 
-# → Keep your original ones here (they are long, so I didn't repeat them). 
-# Just copy-paste your original export functions into this file.
+# Paste your original export_excel, export_docx, export_html_report functions here (they remain unchanged)
 
 # ─── SIDEBAR ──────────────────────────────────────────────────────────────────
 with st.sidebar:
     st.markdown('<div class="sidebar-logo">🏛️ Studio Archive</div>', unsafe_allow_html=True)
-    st.markdown("*Pastel Interior Design Portfolio*")
+    st.markdown("*Contemporary Interior Design Portfolio*")
     st.markdown("---")
     page = st.radio("", ["📂 All Projects", "➕ Add New Project", "📊 Statistics"], label_visibility="collapsed")
     st.markdown("---")
@@ -102,8 +161,8 @@ with st.sidebar:
     inprog_count = sum(1 for p in projects if p.get("status") == "In Progress")
     st.markdown(f"**{len(projects)}** total • **{completed_count}** completed • **{inprog_count}** active")
 
-# ─── PAGES (All Projects, Add New, Statistics) ───────────────────────────────
-# Copy your original page code here (the big blocks for if page == "📂 All Projects", etc.)
-# Only change is that colors are now controlled by the new CSS and color dictionaries.
+# ─── Rest of your pages (All Projects, Add New Project, Statistics) ───────────
+# Copy-paste the rest of your original code from the "if page == ..." blocks onwards.
+# The colors will now automatically apply through the new CSS and color variables.
 
-# For brevity, if you want the complete merged code with all pages + exports, reply with "Give full merged code" and I'll provide it in the next message.
+# If you want me to merge everything into one complete file, just say "Give full complete code".
