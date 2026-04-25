@@ -194,20 +194,20 @@ section[data-testid="stSidebar"] .stMarkdown p {{
     --primary-color: {ACCENT_GOLD} !important;
 }}
 
-/* Radio buttons — dot + ring */
+/* Radio buttons — white dots in sidebar */
 .stRadio > div > label > div:first-child {{
-    border-color: {ACCENT_GOLD} !important;
+    border-color: #ffffff !important;
     background: transparent !important;
 }}
 .stRadio > div > label[data-baseweb="radio"] > div:first-child > div {{
-    background: {ACCENT_GOLD} !important;
+    background: #ffffff !important;
 }}
 [data-baseweb="radio"] [data-checked="true"] > div {{
-    background: {ACCENT_GOLD} !important;
-    border-color: {ACCENT_GOLD} !important;
+    background: #ffffff !important;
+    border-color: #ffffff !important;
 }}
 [data-baseweb="radio"]:focus-within > label > div:first-child {{
-    box-shadow: 0 0 0 3px rgba(201,169,110,0.25) !important;
+    box-shadow: 0 0 0 3px rgba(255,255,255,0.25) !important;
 }}
 
 /* File uploader — nuke purple background */
