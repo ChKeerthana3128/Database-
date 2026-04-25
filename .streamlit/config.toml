@@ -5,6 +5,6 @@ maxUploadSize = 300   # Increase to 300MB or more if needed
 [theme]
 primaryColor = "#c9a96e"
 backgroundColor = "#f0ede6"
-secondaryBackgroundColor = #f2ebe0
+secondaryBackgroundColor = "#f2ebe0"
 textColor = "#1a1a1a"
 font = "sans serif"
