@@ -32,9 +32,9 @@ BORDER_COLOR      = "#ddd6c8"
 
 PHASES = [
     {"key": "phase1", "label": "Phase 1 — Site Visit & CAD Drafting",        "color": ACCENT_ROSE,  "icon": "📍"},
-    {"key": "phase2", "label": "Phase 2 — Finalising Services & Kitchen",     "color": ACCENT_SAGE,  "icon": "🔧"},
-    {"key": "phase3", "label": "Phase 3 — 2D & 3D Designs",                  "color": ACCENT_PLUM,  "icon": "🎨"},
-    {"key": "phase4", "label": "Phase 4 — Working Drawings & Selections",     "color": ACCENT_GOLD,  "icon": "📐"},
+    {"key": "phase2", "label": "Phase 2 — Finalising Services & Kitchen",     "color": ACCENT_ROSE,  "icon": "🔧"},
+    {"key": "phase3", "label": "Phase 3 — 2D & 3D Designs",                  "color": ACCENT_ROSE,  "icon": "🎨"},
+    {"key": "phase4", "label": "Phase 4 — Working Drawings & Selections",     "color": ACCENT_ROSE,  "icon": "📐"},
 ]
 
 STATUS_META = {
