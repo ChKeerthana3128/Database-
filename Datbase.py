@@ -453,7 +453,6 @@ def render_project_detail(proj):
     </div>
     """, unsafe_allow_html=True)
 
-    # Phase files
     st.markdown(f"<h3 style='font-family:Cormorant Garamond,serif; font-size:1.5rem; margin-bottom:1rem;'>📁 Files by Phase</h3>", unsafe_allow_html=True)
     any_files = False
     IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".webp"}
@@ -466,25 +465,45 @@ def render_project_detail(proj):
             if files:
                 any_files = True
 
-                # Phase header
-                st.markdown(f"""
-                <div style="
-                    background:white; border-radius:16px 16px 0 0;
-                    padding:1rem 1.6rem 0.6rem;
-                    border-left:5px solid {ph['color']};
-                    border-top:1px solid #f0ede6;
-                    border-right:1px solid #f0ede6;
-                    box-shadow:0 2px 10px rgba(0,0,0,0.04);
-                    margin-bottom:0;
-                ">
-                    <span style="font-weight:600; color:{ph['color']}; font-size:1rem;">
-                        {ph['icon']} {ph['label']}
-                    </span>
-                    <span style="font-weight:400; color:{TEXT_LIGHT}; font-size:0.82rem; margin-left:8px;">
-                        {len(files)} file{'s' if len(files)!=1 else ''}
-                    </span>
-                </div>
-                """, unsafe_allow_html=True)
+                # ── Build ZIP in memory for this phase ──
+                zip_buf = io.BytesIO()
+                import zipfile
+                with zipfile.ZipFile(zip_buf, "w", zipfile.ZIP_DEFLATED) as zf:
+                    for f in files:
+                        zf.write(f, arcname=f.name)
+                zip_buf.seek(0)
+                zip_bytes = zip_buf.read()
+
+                # ── Phase header row with Download All button ──
+                hdr_col, btn_col = st.columns([3, 1])
+                with hdr_col:
+                    st.markdown(f"""
+                    <div style="
+                        background:white; border-radius:16px 0 0 0;
+                        padding:1rem 1.6rem 0.6rem;
+                        border-left:5px solid {ph['color']};
+                        border-top:1px solid #f0ede6;
+                        border-right:1px solid #f0ede6;
+                        box-shadow:0 2px 10px rgba(0,0,0,0.04);
+                    ">
+                        <span style="font-weight:600; color:{ph['color']}; font-size:1rem;">
+                            {ph['icon']} {ph['label']}
+                        </span>
+                        <span style="font-weight:400; color:{TEXT_LIGHT}; font-size:0.82rem; margin-left:8px;">
+                            {len(files)} file{'s' if len(files)!=1 else ''}
+                        </span>
+                    </div>
+                    """, unsafe_allow_html=True)
+                with btn_col:
+                    st.markdown("<div style='height:0.6rem'></div>", unsafe_allow_html=True)
+                    st.download_button(
+                        label=f"⬇️ Download All ({len(files)} files)",
+                        data=zip_bytes,
+                        file_name=f"{proj['id']}_{ph['key']}.zip",
+                        mime="application/zip",
+                        key=f"zip_{proj['id']}_{ph['key']}",
+                        use_container_width=True,
+                    )
 
                 # Separate images from other files
                 images = [f for f in files if f.suffix.lower() in IMAGE_EXTS]
@@ -508,7 +527,6 @@ def render_project_detail(proj):
                     # ── Image Gallery ──
                     if images:
                         st.markdown(f"<p style='font-size:0.82rem; font-weight:600; color:{TEXT_MID}; margin:0.4rem 0 0.6rem;'>🖼️ Images</p>", unsafe_allow_html=True)
-                        # Show in rows of 3
                         for i in range(0, len(images), 3):
                             row = images[i:i+3]
                             cols = st.columns(len(row))
@@ -540,26 +558,55 @@ def render_project_detail(proj):
                                     key=f"dl_{proj['id']}_{ph['key']}_{vf.name}"
                                 )
 
-                    # ── Other files — listed simply, no section label ──
+                    # ── Other files ──
                     for of in others:
                         size_kb  = round(of.stat().st_size / 1024, 1)
                         size_str = f"{size_kb} KB" if size_kb < 1024 else f"{round(size_kb/1024,1)} MB"
-                        st.markdown(f"""
-                        <div style="
-                            display:flex; align-items:center; gap:10px;
-                            padding:7px 10px;
-                            background:#faf8f2; border-radius:8px;
-                            border:1px solid {BORDER_COLOR};
-                            margin-bottom:5px;
-                        ">
-                            <span style="font-size:1.3rem;">{file_icon(of.name)}</span>
-                            <div style="flex:1;">
-                                <div style="font-size:0.88rem; font-weight:500; color:{TEXT_DARK};">{of.name}</div>
-                                <div style="font-size:0.75rem; color:{TEXT_LIGHT};">{size_str}</div>
+                        file_col, dl_col = st.columns([3, 1])
+                        with file_col:
+                            st.markdown(f"""
+                            <div style="
+                                display:flex; align-items:center; gap:10px;
+                                padding:7px 10px;
+                                background:#faf8f2; border-radius:8px;
+                                border:1px solid {BORDER_COLOR};
+                                margin-bottom:5px;
+                            ">
+                                <span style="font-size:1.3rem;">{file_icon(of.name)}</span>
+                                <div style="flex:1;">
+                                    <div style="font-size:0.88rem; font-weight:500; color:{TEXT_DARK};">{of.name}</div>
+                                    <div style="font-size:0.75rem; color:{TEXT_LIGHT};">{size_str}</div>
+                                </div>
                             </div>
-                        </div>
-                        """, unsafe_allow_html=True)
+                            """, unsafe_allow_html=True)
+                        with dl_col:
+                            st.markdown("<div style='height:0.3rem'></div>", unsafe_allow_html=True)
+                            with open(of, "rb") as fh:
+                                st.download_button(
+                                    "⬇️ Download",
+                                    fh.read(),
+                                    file_name=of.name,
+                                    mime="application/octet-stream",
+                                    key=f"dl_{proj['id']}_{ph['key']}_{of.name}",
+                                    use_container_width=True
+                                )
 
+                    st.markdown("</div>", unsafe_allow_html=True)
+
+    if not any_files:
+        st.info("No files uploaded for this project yet.")
+
+    if proj.get("notes"):
+        st.markdown(f"""
+        <div style="
+            background:#fdf8f0; border-radius:14px;
+            padding:1.2rem 1.6rem; margin-top:1rem;
+            border-left:5px solid {ACCENT_GOLD};
+        ">
+            <p style="font-weight:600; color:{ACCENT_GOLD}; margin:0 0 0.4rem;">📝 Notes</p>
+            <p style="color:{TEXT_MID}; margin:0; line-height:1.7;">{proj.get('notes','')}</p>
+        </div>
+        """, unsafe_allow_html=True)
                     st.markdown("</div>", unsafe_allow_html=True)
 
     if not any_files:
