@@ -712,14 +712,139 @@ if page == "📂  All Projects":
                         )
 
                     st.markdown("---")
-                    if st.button(f"🗑️ Delete Project", key=f"del_{proj['id']}", type="secondary"):
-                        projects = [p for p in projects if p["id"] != proj["id"]]
-                        save_projects(projects)
-                        proj_dir = UPLOAD_DIR / proj["id"]
-                        if proj_dir.exists():
-                            shutil.rmtree(proj_dir)
-                        st.success("Project deleted.")
-                        st.rerun()
+                    act_col1, act_col2 = st.columns(2)
+                    with act_col1:
+                        if st.button(f"✏️ Edit Project", key=f"edit_{proj['id']}", use_container_width=True):
+                            st.session_state["editing_id"] = proj["id"]
+                            st.rerun()
+                    with act_col2:
+                        if st.button(f"🗑️ Delete Project", key=f"del_{proj['id']}", use_container_width=True, type="secondary"):
+                            projects = [p for p in projects if p["id"] != proj["id"]]
+                            save_projects(projects)
+                            proj_dir = UPLOAD_DIR / proj["id"]
+                            if proj_dir.exists():
+                                shutil.rmtree(proj_dir)
+                            st.success("Project deleted.")
+                            st.rerun()
+
+# ─── PAGE: EDIT PROJECT ───────────────────────────────────────────────────────
+if "editing_id" in st.session_state and st.session_state["editing_id"]:
+    editing_id = st.session_state["editing_id"]
+    projects   = load_projects()
+    proj       = next((p for p in projects if p["id"] == editing_id), None)
+
+    if proj:
+        hero("Edit Project", f"Updating — {proj.get('name','')}", "✏️")
+
+        if st.button("← Back to All Projects"):
+            del st.session_state["editing_id"]
+            st.rerun()
+
+        with st.form("edit_form"):
+            st.markdown(f"<h3 style='font-family:Cormorant Garamond,serif; color:{TEXT_DARK}; margin-bottom:1rem;'>Project Details</h3>", unsafe_allow_html=True)
+
+            c1, c2 = st.columns(2)
+            with c1:
+                name         = st.text_input("Project Name *",   value=proj.get("name",""))
+                client       = st.text_input("Client Name",       value=proj.get("client",""))
+                year         = st.number_input("Year *", min_value=2000, max_value=2035, value=int(proj.get("year", datetime.now().year)))
+                area         = st.text_input("Area / Location",   value=proj.get("area",""))
+            with c2:
+                type_options = ["Residential","Commercial","Office","Hospitality","Retail","Renovation","Other"]
+                curr_type    = proj.get("project_type","Residential")
+                project_type = st.selectbox("Project Type *", type_options, index=type_options.index(curr_type) if curr_type in type_options else 0)
+
+                budget_options = ["—","Under ₹5L","₹5L–₹20L","₹20L–₹50L","₹50L–₹1Cr","₹1Cr+"]
+                curr_budget    = proj.get("budget_range","—")
+                budget_range   = st.selectbox("Budget Range", budget_options, index=budget_options.index(curr_budget) if curr_budget in budget_options else 0)
+
+                status_options = ["Completed","In Progress","Concept / Proposal","On Hold"]
+                curr_status    = proj.get("status","In Progress")
+                status         = st.selectbox("Status", status_options, index=status_options.index(curr_status) if curr_status in status_options else 0)
+
+                all_styles   = ["Contemporary","Modern","Minimalist","Traditional","Luxury","Sustainable","Industrial","Vastu","Japandi","Maximalist"]
+                styles       = st.multiselect("Design Styles", all_styles, default=proj.get("styles",[]))
+
+            description = st.text_area("Project Description", value=proj.get("description",""), height=130)
+
+            st.markdown(f"""
+            <h3 style='font-family:Cormorant Garamond,serif; color:{TEXT_DARK}; margin:1.5rem 0 0.5rem;'>
+                📁 Add More Files by Phase
+            </h3>
+            <p style='color:{TEXT_LIGHT}; font-size:0.87rem; margin-bottom:0.5rem;'>
+                Existing files are kept. Upload new files to add them to a phase.
+            </p>
+            """, unsafe_allow_html=True)
+
+            phase_files = {}
+            for ph in PHASES:
+                # Show existing files for this phase
+                proj_dir = UPLOAD_DIR / proj["id"]
+                ph_dir   = proj_dir / ph["key"]
+                existing = list(ph_dir.iterdir()) if ph_dir.exists() else []
+
+                st.markdown(f"""
+                <div style="display:flex; align-items:center; gap:8px; margin:1rem 0 0.2rem; font-weight:600; color:{ph['color']};">
+                    {ph['icon']} {ph['label']}
+                    <span style="font-weight:400; color:{TEXT_LIGHT}; font-size:0.82rem;">
+                        ({len(existing)} existing file{'s' if len(existing)!=1 else ''})
+                    </span>
+                </div>
+                """, unsafe_allow_html=True)
+
+                if existing:
+                    existing_names = "  ·  ".join([f"{file_icon(f.name)} {f.name}" for f in existing])
+                    st.markdown(f"<p style='font-size:0.8rem; color:{TEXT_LIGHT}; margin-bottom:0.3rem;'>{existing_names}</p>", unsafe_allow_html=True)
+
+                phase_files[ph["key"]] = st.file_uploader(
+                    f"Add new files to {ph['label']}",
+                    accept_multiple_files=True,
+                    key=f"edit_{ph['key']}",
+                    label_visibility="collapsed"
+                )
+
+            notes = st.text_area("Additional Notes", value=proj.get("notes",""), height=100)
+
+            st.markdown("<br>", unsafe_allow_html=True)
+            save_edit = st.form_submit_button("💾  Save Changes", use_container_width=True)
+
+        if save_edit:
+            if not name or not name.strip():
+                st.error("⚠️ Project Name is required!")
+            else:
+                # Update fields
+                proj["name"]         = name.strip()
+                proj["client"]       = client
+                proj["year"]         = int(year)
+                proj["area"]         = area
+                proj["project_type"] = project_type
+                proj["budget_range"] = budget_range
+                proj["status"]       = status
+                proj["styles"]       = styles
+                proj["description"]  = description
+                proj["notes"]        = notes
+                proj["updated_at"]   = datetime.now().isoformat()
+
+                # Save new uploaded files
+                proj_dir    = UPLOAD_DIR / proj["id"]
+                total_new   = 0
+                for ph in PHASES:
+                    files = phase_files.get(ph["key"]) or []
+                    if files:
+                        ph_dir = proj_dir / ph["key"]
+                        ph_dir.mkdir(parents=True, exist_ok=True)
+                        for uf in files:
+                            with open(ph_dir / uf.name, "wb") as fh:
+                                fh.write(uf.getbuffer())
+                            total_new += 1
+
+                # Save back to JSON
+                projects = [proj if p["id"] == proj["id"] else p for p in projects]
+                save_projects(projects)
+
+                st.success(f"✅ **{name}** updated successfully! {f'({total_new} new files added)' if total_new else ''}")
+                del st.session_state["editing_id"]
+                st.rerun()
 
 # ─── PAGE: ADD NEW PROJECT ────────────────────────────────────────────────────
 elif page == "➕  Add New Project":
