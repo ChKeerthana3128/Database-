@@ -489,6 +489,7 @@ def render_project_detail(proj):
                 # Separate images from other files
                 images = [f for f in files if f.suffix.lower() in IMAGE_EXTS]
                 videos = [f for f in files if f.suffix.lower() in VIDEO_EXTS]
+                others = [f for f in files if f.suffix.lower() not in IMAGE_EXTS | VIDEO_EXTS]
 
                 with st.container():
                     st.markdown(f"""
@@ -538,6 +539,26 @@ def render_project_detail(proj):
                                     mime="video/mp4",
                                     key=f"dl_{proj['id']}_{ph['key']}_{vf.name}"
                                 )
+
+                    # ── Other files — listed simply, no section label ──
+                    for of in others:
+                        size_kb  = round(of.stat().st_size / 1024, 1)
+                        size_str = f"{size_kb} KB" if size_kb < 1024 else f"{round(size_kb/1024,1)} MB"
+                        st.markdown(f"""
+                        <div style="
+                            display:flex; align-items:center; gap:10px;
+                            padding:7px 10px;
+                            background:#faf8f2; border-radius:8px;
+                            border:1px solid {BORDER_COLOR};
+                            margin-bottom:5px;
+                        ">
+                            <span style="font-size:1.3rem;">{file_icon(of.name)}</span>
+                            <div style="flex:1;">
+                                <div style="font-size:0.88rem; font-weight:500; color:{TEXT_DARK};">{of.name}</div>
+                                <div style="font-size:0.75rem; color:{TEXT_LIGHT};">{size_str}</div>
+                            </div>
+                        </div>
+                        """, unsafe_allow_html=True)
 
                     st.markdown("</div>", unsafe_allow_html=True)
 
