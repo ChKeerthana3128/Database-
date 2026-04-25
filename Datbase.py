@@ -2,6 +2,7 @@ import streamlit as st
 import json
 import shutil
 import io
+import zipfile
 from datetime import datetime
 from pathlib import Path
 
@@ -14,27 +15,26 @@ st.set_page_config(
 )
 
 # ─── DESIGN TOKENS ────────────────────────────────────────────────────────────
-# Deep teal + warm ivory + gold accent palette
-BG_COLOR          = "#f0ede6"          # warm ivory
-SIDEBAR_BG        = "#1a2e2b"          # deep forest teal
-SIDEBAR_TEXT      = "#e8ded0"          # warm ivory text
-HERO_GRADIENT     = "linear-gradient(135deg, #0d1f1c 0%, #1a3a34 45%, #2a5a50 100%)"
-CARD_BG           = "#ffffff"
-ACCENT_GOLD       = "#c9a96e"          # warm gold
-ACCENT_TERRA      = "#b87355"          # terracotta
-ACCENT_SAGE       = "#6e9e8a"          # sage green
-ACCENT_SAND       = "#c4a882"          # warm sand
-ACCENT_MOCHA      = "#8c6e56"          # mocha brown
-TEXT_DARK         = "#1a1a1a"
-TEXT_MID          = "#4a4a4a"
-TEXT_LIGHT        = "#7a7a7a"
-BORDER_COLOR      = "#ddd6c8"
+BG_COLOR      = "#f0ede6"
+SIDEBAR_BG    = "#1a2e2b"
+SIDEBAR_TEXT  = "#e8ded0"
+HERO_GRADIENT = "linear-gradient(135deg, #0d1f1c 0%, #1a3a34 45%, #2a5a50 100%)"
+CARD_BG       = "#ffffff"
+ACCENT_GOLD   = "#c9a96e"
+ACCENT_TERRA  = "#b87355"
+ACCENT_SAGE   = "#6e9e8a"
+ACCENT_SAND   = "#c4a882"
+ACCENT_MOCHA  = "#8c6e56"
+TEXT_DARK     = "#1a1a1a"
+TEXT_MID      = "#4a4a4a"
+TEXT_LIGHT    = "#7a7a7a"
+BORDER_COLOR  = "#ddd6c8"
 
 PHASES = [
-    {"key": "phase1", "label": "Phase 1 — Site Visit & CAD Drafting",        "color": ACCENT_TERRA, "icon": "📍"},
-    {"key": "phase2", "label": "Phase 2 — Finalising Services & Kitchen",     "color": ACCENT_SAGE,  "icon": "🔧"},
-    {"key": "phase3", "label": "Phase 3 — 2D & 3D Designs",                  "color": ACCENT_MOCHA, "icon": "🎨"},
-    {"key": "phase4", "label": "Phase 4 — Working Drawings & Selections",     "color": ACCENT_GOLD,  "icon": "📐"},
+    {"key": "phase1", "label": "Phase 1 — Site Visit & CAD Drafting",    "color": ACCENT_TERRA, "icon": "📍"},
+    {"key": "phase2", "label": "Phase 2 — Finalising Services & Kitchen", "color": ACCENT_SAGE,  "icon": "🔧"},
+    {"key": "phase3", "label": "Phase 3 — 2D & 3D Designs",              "color": ACCENT_MOCHA, "icon": "🎨"},
+    {"key": "phase4", "label": "Phase 4 — Working Drawings & Selections", "color": ACCENT_GOLD,  "icon": "📐"},
 ]
 
 STATUS_META = {
@@ -44,13 +44,15 @@ STATUS_META = {
     "On Hold":            {"color": ACCENT_MOCHA, "bg": "#f5f0eb", "dot": "⚪"},
 }
 
-TYPE_COLORS = [ACCENT_GOLD, ACCENT_SAGE, ACCENT_TERRA, ACCENT_SAND, ACCENT_MOCHA,
-               "#b5835a", "#5a9e8a", "#a07850"]
+TYPE_COLORS = [
+    ACCENT_GOLD, ACCENT_SAGE, ACCENT_TERRA, ACCENT_SAND, ACCENT_MOCHA,
+    "#b5835a", "#5a9e8a", "#a07850"
+]
 
 # ─── PATHS ────────────────────────────────────────────────────────────────────
 DATA_DIR  = Path("data")
 PROJ_FILE = DATA_DIR / "projects.json"
-UPLOAD_DIR= DATA_DIR / "uploads"
+UPLOAD_DIR = DATA_DIR / "uploads"
 DATA_DIR.mkdir(exist_ok=True)
 UPLOAD_DIR.mkdir(exist_ok=True)
 
@@ -59,13 +61,10 @@ st.markdown(f"""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap');
 
-/* ── Reset & Base ── */
 html, body, [class*="css"] {{
     font-family: 'DM Sans', sans-serif;
     color: {TEXT_DARK};
 }}
-
-/* ── Main background ── */
 .main .block-container {{
     background: {BG_COLOR};
     padding-top: 2rem;
@@ -74,13 +73,10 @@ html, body, [class*="css"] {{
 .main {{
     background: {BG_COLOR};
 }}
-
-/* ── Main content text always dark ── */
 .main h1, .main h2, .main h3, .main h4, .main p,
 .main label, .main .stMarkdown, .main div {{
     color: #3d2e22 !important;
 }}
-/* But keep sidebar text light */
 section[data-testid="stSidebar"] *,
 section[data-testid="stSidebar"] h1,
 section[data-testid="stSidebar"] h2,
@@ -90,8 +86,6 @@ section[data-testid="stSidebar"] label,
 section[data-testid="stSidebar"] div {{
     color: {SIDEBAR_TEXT} !important;
 }}
-
-/* ── Sidebar ── */
 section[data-testid="stSidebar"] {{
     background: {SIDEBAR_BG} !important;
     border-right: 1px solid #0d1a18;
@@ -112,8 +106,6 @@ section[data-testid="stSidebar"] .stMarkdown p {{
     color: #a09080 !important;
     font-size: 0.82rem;
 }}
-
-/* ── Form Inputs ── */
 .stTextInput > div > div > input,
 .stNumberInput > div > div > input,
 .stTextArea > div > div > textarea {{
@@ -139,8 +131,6 @@ section[data-testid="stSidebar"] .stMarkdown p {{
 .stSelectbox svg, .stMultiselect svg {{
     color: {ACCENT_GOLD} !important;
 }}
-
-/* ── File Uploader ── */
 [data-testid="stFileUploadDropzone"],
 .stFileUploader > div > div {{
     background: #faf8f4 !important;
@@ -153,8 +143,6 @@ section[data-testid="stSidebar"] .stMarkdown p {{
     background: #fff8ee !important;
     border-color: {ACCENT_TERRA} !important;
 }}
-
-/* ── Submit Button ── */
 .stFormSubmitButton > button,
 .stButton > button {{
     background: linear-gradient(135deg, {ACCENT_GOLD}, #b8925a) !important;
@@ -173,14 +161,10 @@ section[data-testid="stSidebar"] .stMarkdown p {{
     transform: translateY(-2px) !important;
     box-shadow: 0 6px 22px rgba(201,169,110,0.45) !important;
 }}
-
-/* ── Info / Success Alerts ── */
 .stAlert {{
     border-radius: 10px !important;
     border-left: 4px solid {ACCENT_GOLD} !important;
 }}
-
-/* ── Metric cards ── */
 [data-testid="metric-container"] {{
     background: white;
     border-radius: 14px;
@@ -188,13 +172,9 @@ section[data-testid="stSidebar"] .stMarkdown p {{
     border: 1px solid {BORDER_COLOR};
     box-shadow: 0 2px 12px rgba(0,0,0,0.05);
 }}
-
-/* ── Kill ALL Streamlit purple/violet everywhere ── */
 :root {{
     --primary-color: {ACCENT_GOLD} !important;
 }}
-
-/* Radio buttons — white dots in sidebar */
 .stRadio > div > label > div:first-child {{
     border-color: #ffffff !important;
     background: transparent !important;
@@ -209,8 +189,6 @@ section[data-testid="stSidebar"] .stMarkdown p {{
 [data-baseweb="radio"]:focus-within > label > div:first-child {{
     box-shadow: 0 0 0 3px rgba(255,255,255,0.25) !important;
 }}
-
-/* File uploader — nuke purple background */
 [data-testid="stFileUploader"] {{
     background: transparent !important;
 }}
@@ -227,45 +205,33 @@ section[data-testid="stSidebar"] .stMarkdown p {{
 [data-testid="stFileUploadDropzone"] * {{
     color: #4a4a4a !important;
 }}
-/* The inner wrapper that Streamlit gives a purple tint */
 .stFileUploader > div > div,
 .stFileUploader > div {{
     background: transparent !important;
     border: none !important;
 }}
-
-/* Checkbox */
 [data-baseweb="checkbox"] > div {{
     background: {ACCENT_GOLD} !important;
     border-color: {ACCENT_GOLD} !important;
 }}
-
-/* Progress / spinner */
 .stProgress > div > div {{
     background: {ACCENT_GOLD} !important;
 }}
-
-/* Multiselect tags */
 [data-baseweb="tag"] {{
     background: #f5f0e8 !important;
     color: #4a4a4a !important;
     border: 1px solid #c9a96e !important;
 }}
-
-/* Active page highlight in sidebar radio */
 section[data-testid="stSidebar"] [data-baseweb="radio"] [data-checked="true"] > div {{
     background: {ACCENT_GOLD} !important;
 }}
-
-/* ── Custom scrollbar ── */
 ::-webkit-scrollbar {{ width: 7px; }}
 ::-webkit-scrollbar-track {{ background: {BG_COLOR}; }}
 ::-webkit-scrollbar-thumb {{ background: {ACCENT_GOLD}; border-radius: 4px; }}
-
-/* ── Helpers ── */
 .serif {{ font-family: 'Cormorant Garamond', serif !important; }}
 </style>
 """, unsafe_allow_html=True)
+
 
 # ─── HELPERS ──────────────────────────────────────────────────────────────────
 def load_projects():
@@ -274,9 +240,11 @@ def load_projects():
             return json.load(f)
     return []
 
+
 def save_projects(projects):
     with open(PROJ_FILE, "w") as f:
         json.dump(projects, f, indent=2)
+
 
 def file_icon(name):
     ext = Path(name).suffix.lower()
@@ -292,6 +260,7 @@ def file_icon(name):
     }
     return m.get(ext, "📎")
 
+
 def get_thumbnail(proj_dir: Path):
     if proj_dir.exists():
         for ph in PHASES:
@@ -301,6 +270,7 @@ def get_thumbnail(proj_dir: Path):
                     if f.suffix.lower() in [".jpg", ".jpeg", ".png", ".webp"]:
                         return f
     return None
+
 
 def hero(title, subtitle="", icon=""):
     st.markdown(f"""
@@ -337,6 +307,7 @@ def hero(title, subtitle="", icon=""):
     </div>
     """, unsafe_allow_html=True)
 
+
 def status_badge(status):
     m = STATUS_META.get(status, {"color": TEXT_MID, "bg": "#eee", "dot": "⚫"})
     return f"""<span style="
@@ -346,13 +317,12 @@ def status_badge(status):
         border:1px solid {m['color']}33;
     ">{m['dot']} {status}</span>"""
 
+
 def project_card(proj):
     proj_dir = UPLOAD_DIR / proj["id"]
     thumb = get_thumbnail(proj_dir)
-    sm = STATUS_META.get(proj.get("status",""), {"color": TEXT_MID, "bg": "#eee", "dot": "⚫"})
-    type_color = TYPE_COLORS[hash(proj.get("project_type","")) % len(TYPE_COLORS)]
+    type_color = TYPE_COLORS[hash(proj.get("project_type", "")) % len(TYPE_COLORS)]
 
-    # Count files
     total_files = 0
     if proj_dir.exists():
         for p in proj_dir.rglob("*"):
@@ -377,28 +347,28 @@ def project_card(proj):
         st.markdown(f"""
         <div style="padding: 0.3rem 0;">
             <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:0.6rem;">
-                {status_badge(proj.get('status',''))}
+                {status_badge(proj.get('status', ''))}
                 <span style="
                     background:{type_color}18; color:{type_color};
                     padding:3px 12px; border-radius:20px;
                     font-size:0.78rem; font-weight:600;
                     border:1px solid {type_color}33;
-                ">{proj.get('project_type','')}</span>
+                ">{proj.get('project_type', '')}</span>
             </div>
             <h3 style="
                 font-family:'Cormorant Garamond',serif;
                 font-size:1.55rem; font-weight:700;
                 margin:0 0 0.2rem; color:{TEXT_DARK};
                 line-height:1.2;
-            ">{proj.get('name','Untitled')}</h3>
+            ">{proj.get('name', 'Untitled')}</h3>
             <p style="color:{TEXT_MID}; margin:0 0 0.5rem; font-size:0.9rem;">
-                👤 {proj.get('client','—')} &nbsp;|&nbsp;
-                📍 {proj.get('area','—')} &nbsp;|&nbsp;
-                🗓️ {proj.get('year','')} &nbsp;|&nbsp;
+                👤 {proj.get('client', '—')} &nbsp;|&nbsp;
+                📍 {proj.get('area', '—')} &nbsp;|&nbsp;
+                🗓️ {proj.get('year', '')} &nbsp;|&nbsp;
                 📁 {total_files} file{'s' if total_files != 1 else ''}
             </p>
             <p style="color:{TEXT_LIGHT}; font-size:0.88rem; margin:0 0 0.6rem; line-height:1.5;">
-                {proj.get('description','')[:140]}{'…' if len(proj.get('description','')) > 140 else ''}
+                {proj.get('description', '')[:140]}{'…' if len(proj.get('description', '')) > 140 else ''}
             </p>
         """, unsafe_allow_html=True)
 
@@ -411,10 +381,10 @@ def project_card(proj):
             st.markdown(f'<div style="margin-top:0.2rem;">{pills}</div>', unsafe_allow_html=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
+
 def render_project_detail(proj):
     proj_dir = UPLOAD_DIR / proj["id"]
-    sm = STATUS_META.get(proj.get("status",""), {"color": TEXT_MID, "bg": "#eee", "dot": "⚫"})
-    type_color = TYPE_COLORS[hash(proj.get("project_type","")) % len(TYPE_COLORS)]
+    type_color = TYPE_COLORS[hash(proj.get("project_type", "")) % len(TYPE_COLORS)]
 
     st.markdown(f"""
     <div style="
@@ -424,36 +394,40 @@ def render_project_detail(proj):
         border-top: 6px solid {type_color};
     ">
         <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:1rem;">
-            {status_badge(proj.get('status',''))}
+            {status_badge(proj.get('status', ''))}
             <span style="
                 background:{type_color}18; color:{type_color};
                 padding:3px 14px; border-radius:20px;
                 font-size:0.8rem; font-weight:600;
                 border:1px solid {type_color}33;
-            ">{proj.get('project_type','')}</span>
+            ">{proj.get('project_type', '')}</span>
             <span style="
                 background:#f0ede6; color:{TEXT_LIGHT};
                 padding:3px 14px; border-radius:20px;
                 font-size:0.8rem; border:1px solid {BORDER_COLOR};
-            ">{proj.get('budget_range','')}</span>
+            ">{proj.get('budget_range', '')}</span>
         </div>
         <h2 style="
             font-family:'Cormorant Garamond',serif;
             font-size:2.2rem; font-weight:700;
             margin:0 0 0.4rem; color:{TEXT_DARK};
-        ">{proj.get('name','')}</h2>
+        ">{proj.get('name', '')}</h2>
         <p style="color:{TEXT_MID}; margin:0 0 1rem;">
-            👤 {proj.get('client','—')} &nbsp;·&nbsp;
-            📍 {proj.get('area','—')} &nbsp;·&nbsp;
-            🗓️ {proj.get('year','')}
+            👤 {proj.get('client', '—')} &nbsp;·&nbsp;
+            📍 {proj.get('area', '—')} &nbsp;·&nbsp;
+            🗓️ {proj.get('year', '')}
         </p>
         <p style="color:{TEXT_MID}; line-height:1.7; margin:0 0 1rem;">
-            {proj.get('description','—')}
+            {proj.get('description', '—')}
         </p>
     </div>
     """, unsafe_allow_html=True)
 
-    st.markdown(f"<h3 style='font-family:Cormorant Garamond,serif; font-size:1.5rem; margin-bottom:1rem;'>📁 Files by Phase</h3>", unsafe_allow_html=True)
+    st.markdown(
+        f"<h3 style='font-family:Cormorant Garamond,serif; font-size:1.5rem; margin-bottom:1rem;'>📁 Files by Phase</h3>",
+        unsafe_allow_html=True
+    )
+
     any_files = False
     IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".webp"}
     VIDEO_EXTS = {".mp4", ".mov"}
@@ -467,7 +441,6 @@ def render_project_detail(proj):
 
                 # ── Build ZIP in memory for this phase ──
                 zip_buf = io.BytesIO()
-                import zipfile
                 with zipfile.ZipFile(zip_buf, "w", zipfile.ZIP_DEFLATED) as zf:
                     for f in files:
                         zf.write(f, arcname=f.name)
@@ -490,7 +463,7 @@ def render_project_detail(proj):
                             {ph['icon']} {ph['label']}
                         </span>
                         <span style="font-weight:400; color:{TEXT_LIGHT}; font-size:0.82rem; margin-left:8px;">
-                            {len(files)} file{'s' if len(files)!=1 else ''}
+                            {len(files)} file{'s' if len(files) != 1 else ''}
                         </span>
                     </div>
                     """, unsafe_allow_html=True)
@@ -505,7 +478,7 @@ def render_project_detail(proj):
                         use_container_width=True,
                     )
 
-                # Separate images from other files
+                # Separate files by type
                 images = [f for f in files if f.suffix.lower() in IMAGE_EXTS]
                 videos = [f for f in files if f.suffix.lower() in VIDEO_EXTS]
                 others = [f for f in files if f.suffix.lower() not in IMAGE_EXTS | VIDEO_EXTS]
@@ -526,9 +499,12 @@ def render_project_detail(proj):
 
                     # ── Image Gallery ──
                     if images:
-                        st.markdown(f"<p style='font-size:0.82rem; font-weight:600; color:{TEXT_MID}; margin:0.4rem 0 0.6rem;'>🖼️ Images</p>", unsafe_allow_html=True)
+                        st.markdown(
+                            f"<p style='font-size:0.82rem; font-weight:600; color:{TEXT_MID}; margin:0.4rem 0 0.6rem;'>🖼️ Images</p>",
+                            unsafe_allow_html=True
+                        )
                         for i in range(0, len(images), 3):
-                            row = images[i:i+3]
+                            row = images[i:i + 3]
                             cols = st.columns(len(row))
                             for col, img_file in zip(cols, row):
                                 with col:
@@ -545,9 +521,17 @@ def render_project_detail(proj):
 
                     # ── Videos ──
                     if videos:
-                        st.markdown(f"<p style='font-size:0.82rem; font-weight:600; color:{TEXT_MID}; margin:0.8rem 0 0.4rem;'>🎬 Videos</p>", unsafe_allow_html=True)
+                        st.markdown(
+                            f"<p style='font-size:0.82rem; font-weight:600; color:{TEXT_MID}; margin:0.8rem 0 0.4rem;'>🎬 Videos</p>",
+                            unsafe_allow_html=True
+                        )
                         for vf in videos:
-                            st.markdown(f"<p style='font-size:0.85rem; color:{TEXT_MID}; margin:0.3rem 0;'>{file_icon(vf.name)} {vf.name} <span style='color:{TEXT_LIGHT};'>({round(vf.stat().st_size/1024/1024,1)} MB)</span></p>", unsafe_allow_html=True)
+                            st.markdown(
+                                f"<p style='font-size:0.85rem; color:{TEXT_MID}; margin:0.3rem 0;'>"
+                                f"{file_icon(vf.name)} {vf.name} "
+                                f"<span style='color:{TEXT_LIGHT};'>({round(vf.stat().st_size / 1024 / 1024, 1)} MB)</span></p>",
+                                unsafe_allow_html=True
+                            )
                             st.video(str(vf))
                             with open(vf, "rb") as fh:
                                 st.download_button(
@@ -560,8 +544,8 @@ def render_project_detail(proj):
 
                     # ── Other files ──
                     for of in others:
-                        size_kb  = round(of.stat().st_size / 1024, 1)
-                        size_str = f"{size_kb} KB" if size_kb < 1024 else f"{round(size_kb/1024,1)} MB"
+                        size_kb = round(of.stat().st_size / 1024, 1)
+                        size_str = f"{size_kb} KB" if size_kb < 1024 else f"{round(size_kb / 1024, 1)} MB"
                         file_col, dl_col = st.columns([3, 1])
                         with file_col:
                             st.markdown(f"""
@@ -604,48 +588,32 @@ def render_project_detail(proj):
             border-left:5px solid {ACCENT_GOLD};
         ">
             <p style="font-weight:600; color:{ACCENT_GOLD}; margin:0 0 0.4rem;">📝 Notes</p>
-            <p style="color:{TEXT_MID}; margin:0; line-height:1.7;">{proj.get('notes','')}</p>
+            <p style="color:{TEXT_MID}; margin:0; line-height:1.7;">{proj.get('notes', '')}</p>
         </div>
         """, unsafe_allow_html=True)
-                    st.markdown("</div>", unsafe_allow_html=True)
 
-    if not any_files:
-        st.info("No files uploaded for this project yet.")
-
-    if proj.get("notes"):
-        st.markdown(f"""
-        <div style="
-            background:#fdf8f0; border-radius:14px;
-            padding:1.2rem 1.6rem; margin-top:1rem;
-            border-left:5px solid {ACCENT_GOLD};
-        ">
-            <p style="font-weight:600; color:{ACCENT_GOLD}; margin:0 0 0.4rem;">📝 Notes</p>
-            <p style="color:{TEXT_MID}; margin:0; line-height:1.7;">{proj.get('notes','')}</p>
-        </div>
-        """, unsafe_allow_html=True)
 
 def export_excel(proj):
     try:
         import openpyxl
-        from openpyxl.styles import Font, PatternFill, Alignment
+        from openpyxl.styles import Font
         wb = openpyxl.Workbook()
         ws = wb.active
         ws.title = "Project Details"
-        # Header
         ws["A1"] = "Studio Archive — Project Report"
         ws["A1"].font = Font(bold=True, size=14)
         ws["A2"] = proj.get("name", "")
         ws["A2"].font = Font(bold=True, size=12)
         fields = [
-            ("Client", proj.get("client","")),
-            ("Year", proj.get("year","")),
-            ("Area", proj.get("area","")),
-            ("Type", proj.get("project_type","")),
-            ("Status", proj.get("status","")),
-            ("Budget", proj.get("budget_range","")),
-            ("Styles", ", ".join(proj.get("styles",[]))),
-            ("Description", proj.get("description","")),
-            ("Notes", proj.get("notes","")),
+            ("Client",      proj.get("client", "")),
+            ("Year",        proj.get("year", "")),
+            ("Area",        proj.get("area", "")),
+            ("Type",        proj.get("project_type", "")),
+            ("Status",      proj.get("status", "")),
+            ("Budget",      proj.get("budget_range", "")),
+            ("Styles",      ", ".join(proj.get("styles", []))),
+            ("Description", proj.get("description", "")),
+            ("Notes",       proj.get("notes", "")),
         ]
         for i, (k, v) in enumerate(fields, start=4):
             ws[f"A{i}"] = k
@@ -657,32 +625,33 @@ def export_excel(proj):
         wb.save(buf)
         buf.seek(0)
         return buf.read()
-    except:
+    except Exception:
         return None
+
 
 def export_docx(proj):
     try:
         from docx import Document
-        from docx.shared import Pt, RGBColor
         doc = Document()
         doc.add_heading(proj.get("name", "Project"), 0)
-        doc.add_paragraph(f"Client: {proj.get('client','—')}")
-        doc.add_paragraph(f"Year: {proj.get('year','')}")
-        doc.add_paragraph(f"Area: {proj.get('area','—')}")
-        doc.add_paragraph(f"Type: {proj.get('project_type','')}")
-        doc.add_paragraph(f"Status: {proj.get('status','')}")
-        doc.add_paragraph(f"Budget: {proj.get('budget_range','')}")
+        doc.add_paragraph(f"Client: {proj.get('client', '—')}")
+        doc.add_paragraph(f"Year: {proj.get('year', '')}")
+        doc.add_paragraph(f"Area: {proj.get('area', '—')}")
+        doc.add_paragraph(f"Type: {proj.get('project_type', '')}")
+        doc.add_paragraph(f"Status: {proj.get('status', '')}")
+        doc.add_paragraph(f"Budget: {proj.get('budget_range', '')}")
         doc.add_heading("Description", level=2)
-        doc.add_paragraph(proj.get("description",""))
+        doc.add_paragraph(proj.get("description", ""))
         if proj.get("notes"):
             doc.add_heading("Notes", level=2)
-            doc.add_paragraph(proj.get("notes",""))
+            doc.add_paragraph(proj.get("notes", ""))
         buf = io.BytesIO()
         doc.save(buf)
         buf.seek(0)
         return buf.read()
-    except:
+    except Exception:
         return None
+
 
 # ─── SIDEBAR ──────────────────────────────────────────────────────────────────
 with st.sidebar:
@@ -725,7 +694,11 @@ with st.sidebar:
     """, unsafe_allow_html=True)
 
     st.markdown("---")
-    st.markdown(f"<div style='color:#506060; font-size:0.75rem; line-height:1.6;'>Studio Archive v2.0<br>© {datetime.now().year} Your Studio</div>", unsafe_allow_html=True)
+    st.markdown(
+        f"<div style='color:#506060; font-size:0.75rem; line-height:1.6;'>Studio Archive v2.0<br>© {datetime.now().year} Your Studio</div>",
+        unsafe_allow_html=True
+    )
+
 
 # ─── PAGE: ALL PROJECTS ───────────────────────────────────────────────────────
 if page == "📂  All Projects":
@@ -749,10 +722,10 @@ if page == "📂  All Projects":
         with col_search:
             search = st.text_input("🔍 Search projects…", placeholder="Name, client, area…")
         with col_type:
-            types   = ["All Types"] + sorted(set(p.get("project_type","") for p in projects))
-            f_type  = st.selectbox("Type", types)
+            types  = ["All Types"] + sorted(set(p.get("project_type", "") for p in projects))
+            f_type = st.selectbox("Type", types)
         with col_status:
-            statuses = ["All Statuses"] + sorted(set(p.get("status","") for p in projects))
+            statuses = ["All Statuses"] + sorted(set(p.get("status", "") for p in projects))
             f_status = st.selectbox("Status", statuses)
         with col_sort:
             sort_by = st.selectbox("Sort by", ["Newest First", "Oldest First", "Name A–Z", "Name Z–A"])
@@ -761,10 +734,11 @@ if page == "📂  All Projects":
         filtered = projects[:]
         if search:
             q = search.lower()
-            filtered = [p for p in filtered if
-                q in p.get("name","").lower() or
-                q in p.get("client","").lower() or
-                q in p.get("area","").lower()
+            filtered = [
+                p for p in filtered if
+                q in p.get("name", "").lower() or
+                q in p.get("client", "").lower() or
+                q in p.get("area", "").lower()
             ]
         if f_type != "All Types":
             filtered = [p for p in filtered if p.get("project_type") == f_type]
@@ -773,21 +747,24 @@ if page == "📂  All Projects":
 
         # Sort
         if sort_by == "Newest First":
-            filtered = sorted(filtered, key=lambda p: p.get("year",0), reverse=True)
+            filtered = sorted(filtered, key=lambda p: p.get("year", 0), reverse=True)
         elif sort_by == "Oldest First":
-            filtered = sorted(filtered, key=lambda p: p.get("year",0))
+            filtered = sorted(filtered, key=lambda p: p.get("year", 0))
         elif sort_by == "Name A–Z":
-            filtered = sorted(filtered, key=lambda p: p.get("name","").lower())
+            filtered = sorted(filtered, key=lambda p: p.get("name", "").lower())
         elif sort_by == "Name Z–A":
-            filtered = sorted(filtered, key=lambda p: p.get("name","").lower(), reverse=True)
+            filtered = sorted(filtered, key=lambda p: p.get("name", "").lower(), reverse=True)
 
-        st.markdown(f"<p style='color:{TEXT_LIGHT}; font-size:0.88rem; margin-bottom:1.2rem;'>Showing {len(filtered)} of {len(projects)} projects</p>", unsafe_allow_html=True)
+        st.markdown(
+            f"<p style='color:{TEXT_LIGHT}; font-size:0.88rem; margin-bottom:1.2rem;'>Showing {len(filtered)} of {len(projects)} projects</p>",
+            unsafe_allow_html=True
+        )
 
         if not filtered:
             st.warning("No projects match your filters.")
         else:
             for proj in filtered:
-                type_color = TYPE_COLORS[hash(proj.get("project_type","")) % len(TYPE_COLORS)]
+                type_color = TYPE_COLORS[hash(proj.get("project_type", "")) % len(TYPE_COLORS)]
                 with st.container():
                     st.markdown(f"""
                     <div style="
@@ -801,7 +778,7 @@ if page == "📂  All Projects":
                     project_card(proj)
                     st.markdown("</div>", unsafe_allow_html=True)
 
-                with st.expander(f"📂 View Full Details — {proj.get('name','')}"):
+                with st.expander(f"📂 View Full Details — {proj.get('name', '')}"):
                     render_project_detail(proj)
 
                     st.markdown("**Export Project:**")
@@ -852,6 +829,7 @@ if page == "📂  All Projects":
                             st.success("Project deleted.")
                             st.rerun()
 
+
 # ─── PAGE: EDIT PROJECT ───────────────────────────────────────────────────────
 if "editing_id" in st.session_state and st.session_state["editing_id"]:
     editing_id = st.session_state["editing_id"]
@@ -859,38 +837,41 @@ if "editing_id" in st.session_state and st.session_state["editing_id"]:
     proj       = next((p for p in projects if p["id"] == editing_id), None)
 
     if proj:
-        hero("Edit Project", f"Updating — {proj.get('name','')}", "✏️")
+        hero("Edit Project", f"Updating — {proj.get('name', '')}", "✏️")
 
         if st.button("← Back to All Projects"):
             del st.session_state["editing_id"]
             st.rerun()
 
         with st.form("edit_form"):
-            st.markdown(f"<h3 style='font-family:Cormorant Garamond,serif; color:{TEXT_DARK}; margin-bottom:1rem;'>Project Details</h3>", unsafe_allow_html=True)
+            st.markdown(
+                f"<h3 style='font-family:Cormorant Garamond,serif; color:{TEXT_DARK}; margin-bottom:1rem;'>Project Details</h3>",
+                unsafe_allow_html=True
+            )
 
             c1, c2 = st.columns(2)
             with c1:
-                name         = st.text_input("Project Name *",   value=proj.get("name",""))
-                client       = st.text_input("Client Name",       value=proj.get("client",""))
-                year         = st.number_input("Year *", min_value=2000, max_value=2035, value=int(proj.get("year", datetime.now().year)))
-                area         = st.text_input("Area / Location",   value=proj.get("area",""))
+                name   = st.text_input("Project Name *", value=proj.get("name", ""))
+                client = st.text_input("Client Name",    value=proj.get("client", ""))
+                year   = st.number_input("Year *", min_value=2000, max_value=2035, value=int(proj.get("year", datetime.now().year)))
+                area   = st.text_input("Area / Location", value=proj.get("area", ""))
             with c2:
-                type_options = ["Residential","Commercial","Office","Hospitality","Retail","Renovation","Other"]
-                curr_type    = proj.get("project_type","Residential")
+                type_options = ["Residential", "Commercial", "Office", "Hospitality", "Retail", "Renovation", "Other"]
+                curr_type    = proj.get("project_type", "Residential")
                 project_type = st.selectbox("Project Type *", type_options, index=type_options.index(curr_type) if curr_type in type_options else 0)
 
-                budget_options = ["—","Under ₹5L","₹5L–₹20L","₹20L–₹50L","₹50L–₹1Cr","₹1Cr+"]
-                curr_budget    = proj.get("budget_range","—")
+                budget_options = ["—", "Under ₹5L", "₹5L–₹20L", "₹20L–₹50L", "₹50L–₹1Cr", "₹1Cr+"]
+                curr_budget    = proj.get("budget_range", "—")
                 budget_range   = st.selectbox("Budget Range", budget_options, index=budget_options.index(curr_budget) if curr_budget in budget_options else 0)
 
-                status_options = ["Completed","In Progress","Concept / Proposal","On Hold"]
-                curr_status    = proj.get("status","In Progress")
+                status_options = ["Completed", "In Progress", "Concept / Proposal", "On Hold"]
+                curr_status    = proj.get("status", "In Progress")
                 status         = st.selectbox("Status", status_options, index=status_options.index(curr_status) if curr_status in status_options else 0)
 
-                all_styles   = ["Contemporary","Modern","Minimalist","Traditional","Luxury","Sustainable","Industrial","Vastu","Japandi","Maximalist"]
-                styles       = st.multiselect("Design Styles", all_styles, default=proj.get("styles",[]))
+                all_styles = ["Contemporary", "Modern", "Minimalist", "Traditional", "Luxury", "Sustainable", "Industrial", "Vastu", "Japandi", "Maximalist"]
+                styles     = st.multiselect("Design Styles", all_styles, default=proj.get("styles", []))
 
-            description = st.text_area("Project Description", value=proj.get("description",""), height=130)
+            description = st.text_area("Project Description", value=proj.get("description", ""), height=130)
 
             st.markdown(f"""
             <h3 style='font-family:Cormorant Garamond,serif; color:{TEXT_DARK}; margin:1.5rem 0 0.5rem;'>
@@ -901,7 +882,7 @@ if "editing_id" in st.session_state and st.session_state["editing_id"]:
             </p>
             """, unsafe_allow_html=True)
 
-            phase_files    = {}
+            phase_files     = {}
             files_to_delete = {}
 
             for ph in PHASES:
@@ -921,16 +902,18 @@ if "editing_id" in st.session_state and st.session_state["editing_id"]:
                     <div style="font-weight:600; color:{ph['color']}; margin-bottom:0.6rem;">
                         {ph['icon']} {ph['label']}
                         <span style="font-weight:400; color:{TEXT_LIGHT}; font-size:0.82rem; margin-left:8px;">
-                            ({len(existing)} file{'s' if len(existing)!=1 else ''})
+                            ({len(existing)} file{'s' if len(existing) != 1 else ''})
                         </span>
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
 
-                # Per-file delete checkboxes
                 delete_these = []
                 if existing:
-                    st.markdown(f"<p style='font-size:0.82rem; color:{TEXT_MID}; margin:0 0 0.3rem;'>☑ Tick to delete:</p>", unsafe_allow_html=True)
+                    st.markdown(
+                        f"<p style='font-size:0.82rem; color:{TEXT_MID}; margin:0 0 0.3rem;'>☑ Tick to delete:</p>",
+                        unsafe_allow_html=True
+                    )
                     for f in existing:
                         size_kb = round(f.stat().st_size / 1024, 1)
                         checked = st.checkbox(
@@ -940,11 +923,13 @@ if "editing_id" in st.session_state and st.session_state["editing_id"]:
                         if checked:
                             delete_these.append(f)
                 else:
-                    st.markdown(f"<p style='font-size:0.82rem; color:{TEXT_LIGHT}; font-style:italic;'>No files yet.</p>", unsafe_allow_html=True)
+                    st.markdown(
+                        f"<p style='font-size:0.82rem; color:{TEXT_LIGHT}; font-style:italic;'>No files yet.</p>",
+                        unsafe_allow_html=True
+                    )
 
                 files_to_delete[ph["key"]] = delete_these
 
-                # Upload new files
                 phase_files[ph["key"]] = st.file_uploader(
                     f"➕ Add new files to {ph['label']}",
                     accept_multiple_files=True,
@@ -952,7 +937,7 @@ if "editing_id" in st.session_state and st.session_state["editing_id"]:
                     label_visibility="collapsed"
                 )
 
-            notes = st.text_area("Additional Notes", value=proj.get("notes",""), height=100)
+            notes = st.text_area("Additional Notes", value=proj.get("notes", ""), height=100)
 
             st.markdown("<br>", unsafe_allow_html=True)
             save_edit = st.form_submit_button("💾  Save Changes", use_container_width=True)
@@ -961,7 +946,6 @@ if "editing_id" in st.session_state and st.session_state["editing_id"]:
             if not name or not name.strip():
                 st.error("⚠️ Project Name is required!")
             else:
-                # Update fields
                 proj["name"]         = name.strip()
                 proj["client"]       = client
                 proj["year"]         = int(year)
@@ -974,7 +958,6 @@ if "editing_id" in st.session_state and st.session_state["editing_id"]:
                 proj["notes"]        = notes
                 proj["updated_at"]   = datetime.now().isoformat()
 
-                # Delete ticked files
                 total_deleted = 0
                 for ph in PHASES:
                     for f in files_to_delete.get(ph["key"], []):
@@ -982,9 +965,8 @@ if "editing_id" in st.session_state and st.session_state["editing_id"]:
                             f.unlink()
                             total_deleted += 1
 
-                # Save new uploaded files
-                proj_dir    = UPLOAD_DIR / proj["id"]
-                total_new   = 0
+                proj_dir  = UPLOAD_DIR / proj["id"]
+                total_new = 0
                 for ph in PHASES:
                     files = phase_files.get(ph["key"]) or []
                     if files:
@@ -995,35 +977,38 @@ if "editing_id" in st.session_state and st.session_state["editing_id"]:
                                 fh.write(uf.getbuffer())
                             total_new += 1
 
-                # Save back to JSON
                 projects = [proj if p["id"] == proj["id"] else p for p in projects]
                 save_projects(projects)
 
                 msg = f"✅ **{name}** updated successfully!"
-                if total_new:     msg += f"  {total_new} new file{'s' if total_new>1 else ''} added."
-                if total_deleted: msg += f"  {total_deleted} file{'s' if total_deleted>1 else ''} deleted."
+                if total_new:     msg += f"  {total_new} new file{'s' if total_new > 1 else ''} added."
+                if total_deleted: msg += f"  {total_deleted} file{'s' if total_deleted > 1 else ''} deleted."
                 st.success(msg)
                 del st.session_state["editing_id"]
                 st.rerun()
+
 
 # ─── PAGE: ADD NEW PROJECT ────────────────────────────────────────────────────
 elif page == "➕  Add New Project":
     hero("Add New Project", "Document a new interior design commission", "➕")
 
     with st.form("add_form", clear_on_submit=True):
-        st.markdown(f"<h3 style='font-family:Cormorant Garamond,serif; color:{TEXT_DARK}; margin-bottom:1rem;'>Project Details</h3>", unsafe_allow_html=True)
+        st.markdown(
+            f"<h3 style='font-family:Cormorant Garamond,serif; color:{TEXT_DARK}; margin-bottom:1rem;'>Project Details</h3>",
+            unsafe_allow_html=True
+        )
 
         c1, c2 = st.columns(2)
         with c1:
-            name         = st.text_input("Project Name *", placeholder="e.g. Verma Residence — Living Room")
-            client       = st.text_input("Client Name", placeholder="e.g. Ravi & Priya Verma")
-            year         = st.number_input("Year *", min_value=2000, max_value=2035, value=datetime.now().year)
-            area         = st.text_input("Area / Location", placeholder="e.g. Jubilee Hills, Hyderabad")
+            name   = st.text_input("Project Name *", placeholder="e.g. Verma Residence — Living Room")
+            client = st.text_input("Client Name",    placeholder="e.g. Ravi & Priya Verma")
+            year   = st.number_input("Year *", min_value=2000, max_value=2035, value=datetime.now().year)
+            area   = st.text_input("Area / Location", placeholder="e.g. Jubilee Hills, Hyderabad")
         with c2:
-            project_type = st.selectbox("Project Type *", ["Residential","Commercial","Office","Hospitality","Retail","Renovation","Other"])
-            budget_range = st.selectbox("Budget Range", ["—","Under ₹5L","₹5L–₹20L","₹20L–₹50L","₹50L–₹1Cr","₹1Cr+"])
-            status       = st.selectbox("Status", ["Completed","In Progress","Concept / Proposal","On Hold"])
-            styles       = st.multiselect("Design Styles", ["Contemporary","Modern","Minimalist","Traditional","Luxury","Sustainable","Industrial","Vastu","Japandi","Maximalist"])
+            project_type = st.selectbox("Project Type *", ["Residential", "Commercial", "Office", "Hospitality", "Retail", "Renovation", "Other"])
+            budget_range = st.selectbox("Budget Range", ["—", "Under ₹5L", "₹5L–₹20L", "₹20L–₹50L", "₹50L–₹1Cr", "₹1Cr+"])
+            status       = st.selectbox("Status", ["Completed", "In Progress", "Concept / Proposal", "On Hold"])
+            styles       = st.multiselect("Design Styles", ["Contemporary", "Modern", "Minimalist", "Traditional", "Luxury", "Sustainable", "Industrial", "Vastu", "Japandi", "Maximalist"])
 
         description = st.text_area("Project Description", height=130, placeholder="Describe the design intent, key challenges, and outcomes…")
 
@@ -1063,7 +1048,7 @@ elif page == "➕  Add New Project":
         if not name or not name.strip():
             st.error("⚠️ Project Name is required!")
         else:
-            proj_id = f"{int(datetime.now().timestamp())}_{name[:20].replace(' ','_').lower()}"
+            proj_id  = f"{int(datetime.now().timestamp())}_{name[:20].replace(' ', '_').lower()}"
             new_proj = {
                 "id":           proj_id,
                 "name":         name.strip(),
@@ -1079,7 +1064,7 @@ elif page == "➕  Add New Project":
                 "created_at":   datetime.now().isoformat()
             }
 
-            proj_dir  = UPLOAD_DIR / proj_id
+            proj_dir    = UPLOAD_DIR / proj_id
             total_files = 0
             for ph in PHASES:
                 files = phase_files.get(ph["key"]) or []
@@ -1098,6 +1083,7 @@ elif page == "➕  Add New Project":
             st.success(f"✅ **{name}** saved successfully with **{total_files}** file{'s' if total_files != 1 else ''}!")
             st.balloons()
 
+
 # ─── PAGE: STATISTICS ─────────────────────────────────────────────────────────
 elif page == "📊  Statistics":
     hero("Studio Statistics", "An overview of your interior design practice", "📊")
@@ -1107,7 +1093,6 @@ elif page == "📊  Statistics":
     if not projects:
         st.info("Add some projects to see your statistics.")
     else:
-        # ── Summary Metrics ──
         total    = len(projects)
         done     = sum(1 for p in projects if p.get("status") == "Completed")
         active   = sum(1 for p in projects if p.get("status") == "In Progress")
@@ -1115,10 +1100,10 @@ elif page == "📊  Statistics":
         years    = [p.get("year", 0) for p in projects if p.get("year")]
 
         m1, m2, m3, m4, m5 = st.columns(5)
-        m1.metric("Total Projects",   total)
-        m2.metric("Completed",        done)
-        m3.metric("In Progress",      active)
-        m4.metric("Concepts",         concepts)
+        m1.metric("Total Projects", total)
+        m2.metric("Completed",      done)
+        m3.metric("In Progress",    active)
+        m4.metric("Concepts",       concepts)
         m5.metric("Year Range", f"{min(years)}–{max(years)}" if years else "—")
 
         st.markdown("<br>", unsafe_allow_html=True)
@@ -1127,15 +1112,18 @@ elif page == "📊  Statistics":
 
         # ── By Type ──
         with col_l:
-            st.markdown(f"<h4 style='font-family:Cormorant Garamond,serif; font-size:1.3rem; margin-bottom:1rem;'>Projects by Type</h4>", unsafe_allow_html=True)
+            st.markdown(
+                f"<h4 style='font-family:Cormorant Garamond,serif; font-size:1.3rem; margin-bottom:1rem;'>Projects by Type</h4>",
+                unsafe_allow_html=True
+            )
             type_counts = {}
             for p in projects:
-                t = p.get("project_type","Unknown")
-                type_counts[t] = type_counts.get(t,0) + 1
+                t = p.get("project_type", "Unknown")
+                type_counts[t] = type_counts.get(t, 0) + 1
 
             for i, (t, count) in enumerate(sorted(type_counts.items(), key=lambda x: -x[1])):
-                pct  = count / total * 100
-                col  = TYPE_COLORS[i % len(TYPE_COLORS)]
+                pct = count / total * 100
+                col = TYPE_COLORS[i % len(TYPE_COLORS)]
                 st.markdown(f"""
                 <div style="margin-bottom:0.8rem;">
                     <div style="display:flex; justify-content:space-between; margin-bottom:3px;">
@@ -1155,11 +1143,14 @@ elif page == "📊  Statistics":
 
         # ── By Status ──
         with col_r:
-            st.markdown(f"<h4 style='font-family:Cormorant Garamond,serif; font-size:1.3rem; margin-bottom:1rem;'>Projects by Status</h4>", unsafe_allow_html=True)
+            st.markdown(
+                f"<h4 style='font-family:Cormorant Garamond,serif; font-size:1.3rem; margin-bottom:1rem;'>Projects by Status</h4>",
+                unsafe_allow_html=True
+            )
             status_counts = {}
             for p in projects:
-                s = p.get("status","Unknown")
-                status_counts[s] = status_counts.get(s,0) + 1
+                s = p.get("status", "Unknown")
+                status_counts[s] = status_counts.get(s, 0) + 1
 
             for s, count in sorted(status_counts.items(), key=lambda x: -x[1]):
                 pct = count / total * 100
@@ -1181,10 +1172,13 @@ elif page == "📊  Statistics":
                 """, unsafe_allow_html=True)
 
         # ── By Year ──
-        st.markdown(f"<h4 style='font-family:Cormorant Garamond,serif; font-size:1.3rem; margin:2rem 0 1rem;'>Projects by Year</h4>", unsafe_allow_html=True)
+        st.markdown(
+            f"<h4 style='font-family:Cormorant Garamond,serif; font-size:1.3rem; margin:2rem 0 1rem;'>Projects by Year</h4>",
+            unsafe_allow_html=True
+        )
         year_counts = {}
         for p in projects:
-            y = str(p.get("year",""))
+            y = str(p.get("year", ""))
             if y:
                 year_counts[y] = year_counts.get(y, 0) + 1
 
@@ -1218,7 +1212,10 @@ elif page == "📊  Statistics":
                     """, unsafe_allow_html=True)
 
         # ── Style cloud ──
-        st.markdown(f"<h4 style='font-family:Cormorant Garamond,serif; font-size:1.3rem; margin:2rem 0 1rem;'>Design Style Distribution</h4>", unsafe_allow_html=True)
+        st.markdown(
+            f"<h4 style='font-family:Cormorant Garamond,serif; font-size:1.3rem; margin:2rem 0 1rem;'>Design Style Distribution</h4>",
+            unsafe_allow_html=True
+        )
         all_styles = {}
         for p in projects:
             for s in p.get("styles", []):
@@ -1230,7 +1227,12 @@ elif page == "📊  Statistics":
             for i, (s, cnt) in enumerate(sorted(all_styles.items(), key=lambda x: -x[1])):
                 size = 0.8 + (cnt / max_s) * 0.8
                 col  = TYPE_COLORS[i % len(TYPE_COLORS)]
-                style_html += f'<span style="display:inline-block; margin:4px; padding:5px 14px; background:{col}18; color:{col}; border:1px solid {col}44; border-radius:20px; font-size:{size:.2f}rem; font-weight:500;">{s} <b>({cnt})</b></span>'
+                style_html += (
+                    f'<span style="display:inline-block; margin:4px; padding:5px 14px; '
+                    f'background:{col}18; color:{col}; border:1px solid {col}44; '
+                    f'border-radius:20px; font-size:{size:.2f}rem; font-weight:500;">'
+                    f'{s} <b>({cnt})</b></span>'
+                )
             st.markdown(f'<div style="line-height:2.5;">{style_html}</div>', unsafe_allow_html=True)
         else:
             st.markdown(f"<p style='color:{TEXT_LIGHT};'>No styles tagged yet.</p>", unsafe_allow_html=True)
