@@ -483,20 +483,6 @@ def render_project_detail(proj):
                 videos = [f for f in files if f.suffix.lower() in VIDEO_EXTS]
                 others = [f for f in files if f.suffix.lower() not in IMAGE_EXTS | VIDEO_EXTS]
 
-                with st.container():
-                    st.markdown(f"""
-                    <div style="
-                        background:white;
-                        border-left:5px solid {ph['color']};
-                        border-bottom:1px solid #f0ede6;
-                        border-right:1px solid #f0ede6;
-                        border-radius:0 0 16px 16px;
-                        padding:1rem 1.4rem 1.4rem;
-                        margin-bottom:1.2rem;
-                        box-shadow:0 4px 14px rgba(0,0,0,0.05);
-                    ">
-                    """, unsafe_allow_html=True)
-
                     # ── Image Gallery (display only, no individual download) ──
                     if images:
                         st.markdown(
@@ -545,7 +531,7 @@ def render_project_detail(proj):
                         </div>
                         """, unsafe_allow_html=True)
 
-                    st.markdown("</div>", unsafe_allow_html=True)
+                    st.markdown("<div style='margin-bottom:1.2rem;'></div>", unsafe_allow_html=True)
 
     if not any_files:
         st.info("No files uploaded for this project yet.")
