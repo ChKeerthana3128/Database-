@@ -769,35 +769,59 @@ if "editing_id" in st.session_state and st.session_state["editing_id"]:
 
             st.markdown(f"""
             <h3 style='font-family:Cormorant Garamond,serif; color:{TEXT_DARK}; margin:1.5rem 0 0.5rem;'>
-                📁 Add More Files by Phase
+                📁 Manage Files by Phase
             </h3>
             <p style='color:{TEXT_LIGHT}; font-size:0.87rem; margin-bottom:0.5rem;'>
-                Existing files are kept. Upload new files to add them to a phase.
+                Tick files to delete them, or upload new ones below each phase.
             </p>
             """, unsafe_allow_html=True)
 
-            phase_files = {}
+            phase_files    = {}
+            files_to_delete = {}
+
             for ph in PHASES:
-                # Show existing files for this phase
                 proj_dir = UPLOAD_DIR / proj["id"]
                 ph_dir   = proj_dir / ph["key"]
-                existing = list(ph_dir.iterdir()) if ph_dir.exists() else []
+                existing = sorted(ph_dir.iterdir()) if ph_dir.exists() else []
 
                 st.markdown(f"""
-                <div style="display:flex; align-items:center; gap:8px; margin:1rem 0 0.2rem; font-weight:600; color:{ph['color']};">
-                    {ph['icon']} {ph['label']}
-                    <span style="font-weight:400; color:{TEXT_LIGHT}; font-size:0.82rem;">
-                        ({len(existing)} existing file{'s' if len(existing)!=1 else ''})
-                    </span>
+                <div style="
+                    background: white;
+                    border-left: 5px solid {ph['color']};
+                    border-radius: 12px;
+                    padding: 1rem 1.4rem;
+                    margin: 1rem 0 0.4rem;
+                    box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+                ">
+                    <div style="font-weight:600; color:{ph['color']}; margin-bottom:0.6rem;">
+                        {ph['icon']} {ph['label']}
+                        <span style="font-weight:400; color:{TEXT_LIGHT}; font-size:0.82rem; margin-left:8px;">
+                            ({len(existing)} file{'s' if len(existing)!=1 else ''})
+                        </span>
+                    </div>
                 </div>
                 """, unsafe_allow_html=True)
 
+                # Per-file delete checkboxes
+                delete_these = []
                 if existing:
-                    existing_names = "  ·  ".join([f"{file_icon(f.name)} {f.name}" for f in existing])
-                    st.markdown(f"<p style='font-size:0.8rem; color:{TEXT_LIGHT}; margin-bottom:0.3rem;'>{existing_names}</p>", unsafe_allow_html=True)
+                    st.markdown(f"<p style='font-size:0.82rem; color:{TEXT_MID}; margin:0 0 0.3rem;'>☑ Tick to delete:</p>", unsafe_allow_html=True)
+                    for f in existing:
+                        size_kb = round(f.stat().st_size / 1024, 1)
+                        checked = st.checkbox(
+                            f"{file_icon(f.name)}  {f.name}  ({size_kb} KB)",
+                            key=f"del_file_{proj['id']}_{ph['key']}_{f.name}"
+                        )
+                        if checked:
+                            delete_these.append(f)
+                else:
+                    st.markdown(f"<p style='font-size:0.82rem; color:{TEXT_LIGHT}; font-style:italic;'>No files yet.</p>", unsafe_allow_html=True)
 
+                files_to_delete[ph["key"]] = delete_these
+
+                # Upload new files
                 phase_files[ph["key"]] = st.file_uploader(
-                    f"Add new files to {ph['label']}",
+                    f"➕ Add new files to {ph['label']}",
                     accept_multiple_files=True,
                     key=f"edit_{ph['key']}",
                     label_visibility="collapsed"
@@ -825,6 +849,14 @@ if "editing_id" in st.session_state and st.session_state["editing_id"]:
                 proj["notes"]        = notes
                 proj["updated_at"]   = datetime.now().isoformat()
 
+                # Delete ticked files
+                total_deleted = 0
+                for ph in PHASES:
+                    for f in files_to_delete.get(ph["key"], []):
+                        if f.exists():
+                            f.unlink()
+                            total_deleted += 1
+
                 # Save new uploaded files
                 proj_dir    = UPLOAD_DIR / proj["id"]
                 total_new   = 0
@@ -842,7 +874,10 @@ if "editing_id" in st.session_state and st.session_state["editing_id"]:
                 projects = [proj if p["id"] == proj["id"] else p for p in projects]
                 save_projects(projects)
 
-                st.success(f"✅ **{name}** updated successfully! {f'({total_new} new files added)' if total_new else ''}")
+                msg = f"✅ **{name}** updated successfully!"
+                if total_new:     msg += f"  {total_new} new file{'s' if total_new>1 else ''} added."
+                if total_deleted: msg += f"  {total_deleted} file{'s' if total_deleted>1 else ''} deleted."
+                st.success(msg)
                 del st.session_state["editing_id"]
                 st.rerun()
 
