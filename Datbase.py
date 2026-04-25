@@ -14,11 +14,10 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# ─── LIGHT PROFESSIONAL ELEGANT PALETTE ───────────────────────────────────────
-BG_COLOR = "#f9f7f2"                    # Very light warm cream — super easy on eyes
-SIDEBAR_BG = "#f4f1ea"                  # Soft warm light beige
-
-HERO_GRADIENT = "linear-gradient(135deg, #5c4633 0%, #8c6b5e 50%, #b89e7e 100%)"  # Warm elegant tones
+# ─── LIGHT PROFESSIONAL COLOR PALETTE ─────────────────────────────────────────
+BG_COLOR = "#f9f7f2"
+SIDEBAR_BG = "#f4f1ea"
+HERO_GRADIENT = "linear-gradient(135deg, #5c4633 0%, #8c6b5e 50%, #b89e7e 100%)"
 
 PHASES = [
     {"key": "phase1", "label": "Phase 1 — Site Visit & CAD Drafting", "color": "#c97d5f", "icon": "📍"},
@@ -43,30 +42,31 @@ UPLOAD_DIR = DATA_DIR / "uploads"
 DATA_DIR.mkdir(exist_ok=True)
 UPLOAD_DIR.mkdir(exist_ok=True)
 
-# ─── STYLES (Light & Professional) ────────────────────────────────────────────
+# ─── IMPROVED STYLES WITH BETTER TEXT VISIBILITY ──────────────────────────────
 st.markdown(f"""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600&display=swap');
 
 html, body, [class*="css"] {{ 
     font-family: 'Inter', sans-serif; 
-    color: #3f2a1e;
+    color: #2c2c2c !important;
 }}
 
 section[data-testid="stSidebar"] {{
     background: {SIDEBAR_BG} !important;
 }}
 section[data-testid="stSidebar"] * {{ 
-    color: #3f2a1e !important; 
+    color: #2c2c2c !important; 
 }}
 
 .main {{ 
     background: {BG_COLOR}; 
 }}
 
-h1, h2, h3, h4 {{
-    font-family: 'Playfair Display', serif !important; 
-    color: #3f2a1e;
+h1, h2, h3, h4, h5, label, .stTextInput label, .stSelectbox label, 
+.stTextArea label, .stNumberInput label, .stMultiselect label {{
+    color: #2c2c2c !important;
+    font-weight: 500;
 }}
 
 .hero-header {{
@@ -113,8 +113,15 @@ h1, h2, h3, h4 {{
     font-family:'Playfair Display',serif; 
     font-size:2.1rem; 
     font-weight:700; 
-    color:#3f2a1e; 
+    color:#2c2c2c; 
     letter-spacing:0.04em;
+}}
+
+/* Specific fix for Add New Project form */
+.stForm label, .stForm div[data-testid="stMarkdownContainer"] p, 
+.stForm .stTextInput > div > div > input, 
+.stForm .stTextArea > div > div > textarea {{
+    color: #2c2c2c !important;
 }}
 </style>
 """, unsafe_allow_html=True)
@@ -145,7 +152,7 @@ def get_thumbnail(proj_dir: Path):
                         return f
     return None
 
-# Simple export functions
+# Simple exports
 def export_excel(proj):
     try:
         import openpyxl
@@ -267,7 +274,6 @@ if page == "📂 All Projects":
                         <small>{file_text}</small>
                     </div>""", unsafe_allow_html=True)
 
-            # Export
             st.markdown("**Export Project**")
             e1, e2, e3, d1 = st.columns([2,2,2,1])
             with e1:
@@ -298,5 +304,112 @@ if page == "📂 All Projects":
 
             st.markdown("---")
 
-# Add New Project & Statistics pages are kept minimal for now.
-# If this light version is better, reply "Add full Add New and Statistics pages" and I'll send the complete file.
+# ═══════════════════════════════════════════════════════════════════════════════
+# PAGE: ADD NEW PROJECT (Fixed Text Visibility)
+# ═══════════════════════════════════════════════════════════════════════════════
+elif page == "➕ Add New Project":
+    st.markdown(f"""
+    <div class="hero-header">
+        <h1>➕ Add New Project</h1>
+        <p>Fill in the details and upload files by phase</p>
+    </div>""", unsafe_allow_html=True)
+
+    with st.form("add_form", clear_on_submit=True):
+        st.subheader("Project Details")
+        c1, c2 = st.columns(2)
+        with c1:
+            name = st.text_input("Project Name *", placeholder="e.g. Verma Residence — Living Room")
+            client = st.text_input("Client Name")
+            year = st.number_input("Year *", min_value=2000, max_value=2030, value=datetime.now().year)
+            area = st.text_input("Area / Location", placeholder="e.g. Jubilee Hills, Hyderabad")
+        with c2:
+            project_type = st.selectbox("Project Type *", ["Residential","Commercial","Office","Hospitality","Retail","Renovation","Other"])
+            budget_range = st.selectbox("Budget Range", ["—","Under ₹5L","₹5L–₹20L","₹20L–₹50L","₹50L–₹1Cr","₹1Cr+"])
+            status = st.selectbox("Status", ["Completed","In Progress","Concept / Proposal","On Hold"])
+
+        description = st.text_area("Project Description", height=120)
+        styles = st.multiselect("Design Styles", ["Contemporary","Modern","Minimalist","Traditional","Luxury","Sustainable","Industrial","Vastu"])
+
+        st.subheader("📁 Upload Files by Phase")
+        phase_files = {}
+        for ph in PHASES:
+            st.markdown(f"**{ph['icon']} {ph['label']}**")
+            phase_files[ph["key"]] = st.file_uploader("", accept_multiple_files=True, key=ph["key"])
+
+        notes = st.text_area("Additional Notes")
+        submitted = st.form_submit_button("💾 Save Project", use_container_width=True)
+
+    if submitted:
+        if not name or not name.strip():
+            st.error("Project Name is required!")
+        else:
+            proj_id = f"{int(datetime.now().timestamp())}_{name[:20].replace(' ','_').lower()}"
+            new_proj = {
+                "id": proj_id, "name": name.strip(), "client": client,
+                "year": int(year), "project_type": project_type, "area": area,
+                "budget_range": budget_range, "description": description,
+                "styles": styles, "status": status, "notes": notes,
+                "created_at": datetime.now().isoformat()
+            }
+
+            proj_dir = UPLOAD_DIR / proj_id
+            total_files = 0
+            for ph in PHASES:
+                files = phase_files.get(ph["key"]) or []
+                if files:
+                    ph_dir = proj_dir / ph["key"]
+                    ph_dir.mkdir(parents=True, exist_ok=True)
+                    for uf in files:
+                        with open(ph_dir / uf.name, "wb") as fh:
+                            fh.write(uf.getbuffer())
+                        total_files += 1
+
+            projects.append(new_proj)
+            save_projects(projects)
+            st.success(f"✅ Project **{name}** saved successfully with {total_files} files!")
+            st.balloons()
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# PAGE: STATISTICS
+# ═══════════════════════════════════════════════════════════════════════════════
+elif page == "📊 Statistics":
+    st.markdown(f"""
+    <div class="hero-header">
+        <h1>📊 Studio Statistics</h1>
+        <p>Overview of your interior design practice</p>
+    </div>""", unsafe_allow_html=True)
+
+    if not projects:
+        st.info("No projects yet.")
+    else:
+        total_files = sum(
+            sum(len(list((UPLOAD_DIR / p.get("id", "") / ph["key"]).iterdir())) 
+                for ph in PHASES if (UPLOAD_DIR / p.get("id", "") / ph["key"]).exists())
+            for p in projects
+        )
+
+        cols = st.columns(5)
+        values = [len(projects), 
+                  sum(1 for p in projects if p.get("status") == "Completed"),
+                  sum(1 for p in projects if p.get("status") == "In Progress"),
+                  total_files,
+                  len(set(p.get("year") for p in projects))]
+        labels = ["Total Projects", "Completed", "In Progress", "Total Files", "Active Years"]
+        colors = ["#6b5b8c", "#5f9b8c", "#c97d5f", "#b89e7e", "#8c6b5e"]
+
+        for col, val, label, color in zip(cols, values, labels, colors):
+            with col:
+                st.markdown(f"""
+                <div class="stat-box" style="background:{color};">
+                    <div style="font-size:2.8rem; font-weight:700;">{val}</div>
+                    <div style="font-size:0.9rem;">{label}</div>
+                </div>""", unsafe_allow_html=True)
+
+        st.markdown("---")
+        ca, cb = st.columns(2)
+        with ca:
+            st.subheader("Projects by Type")
+            st.bar_chart(dict(collections.Counter(p.get("project_type","Other") for p in projects)))
+        with cb:
+            st.subheader("Projects by Year")
+            st.bar_chart(dict(sorted(collections.Counter(p.get("year") for p in projects).items())))
