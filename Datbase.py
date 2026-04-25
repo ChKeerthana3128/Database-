@@ -483,55 +483,55 @@ def render_project_detail(proj):
                 videos = [f for f in files if f.suffix.lower() in VIDEO_EXTS]
                 others = [f for f in files if f.suffix.lower() not in IMAGE_EXTS | VIDEO_EXTS]
 
-                    # ── Image Gallery (display only, no individual download) ──
-                    if images:
+                # ── Image Gallery (display only, no individual download) ──
+                if images:
+                    st.markdown(
+                        f"<p style='font-size:0.82rem; font-weight:600; color:{TEXT_MID}; margin:0.4rem 0 0.6rem;'>🖼️ Images</p>",
+                        unsafe_allow_html=True
+                    )
+                    for i in range(0, len(images), 3):
+                        row = images[i:i + 3]
+                        cols = st.columns(len(row))
+                        for col, img_file in zip(cols, row):
+                            with col:
+                                st.image(str(img_file), use_container_width=True, caption=img_file.name)
+
+                # ── Videos (display only, no individual download) ──
+                if videos:
+                    st.markdown(
+                        f"<p style='font-size:0.82rem; font-weight:600; color:{TEXT_MID}; margin:0.8rem 0 0.4rem;'>🎬 Videos</p>",
+                        unsafe_allow_html=True
+                    )
+                    for vf in videos:
                         st.markdown(
-                            f"<p style='font-size:0.82rem; font-weight:600; color:{TEXT_MID}; margin:0.4rem 0 0.6rem;'>🖼️ Images</p>",
+                            f"<p style='font-size:0.85rem; color:{TEXT_MID}; margin:0.3rem 0;'>"
+                            f"{file_icon(vf.name)} {vf.name} "
+                            f"<span style='color:{TEXT_LIGHT};'>({round(vf.stat().st_size / 1024 / 1024, 1)} MB)</span></p>",
                             unsafe_allow_html=True
                         )
-                        for i in range(0, len(images), 3):
-                            row = images[i:i + 3]
-                            cols = st.columns(len(row))
-                            for col, img_file in zip(cols, row):
-                                with col:
-                                    st.image(str(img_file), use_container_width=True, caption=img_file.name)
+                        st.video(str(vf))
 
-                    # ── Videos (display only, no individual download) ──
-                    if videos:
-                        st.markdown(
-                            f"<p style='font-size:0.82rem; font-weight:600; color:{TEXT_MID}; margin:0.8rem 0 0.4rem;'>🎬 Videos</p>",
-                            unsafe_allow_html=True
-                        )
-                        for vf in videos:
-                            st.markdown(
-                                f"<p style='font-size:0.85rem; color:{TEXT_MID}; margin:0.3rem 0;'>"
-                                f"{file_icon(vf.name)} {vf.name} "
-                                f"<span style='color:{TEXT_LIGHT};'>({round(vf.stat().st_size / 1024 / 1024, 1)} MB)</span></p>",
-                                unsafe_allow_html=True
-                            )
-                            st.video(str(vf))
-
-                    # ── Other files (display only, no individual download) ──
-                    for of in others:
-                        size_kb = round(of.stat().st_size / 1024, 1)
-                        size_str = f"{size_kb} KB" if size_kb < 1024 else f"{round(size_kb / 1024, 1)} MB"
-                        st.markdown(f"""
-                        <div style="
-                            display:flex; align-items:center; gap:10px;
-                            padding:7px 10px;
-                            background:#faf8f2; border-radius:8px;
-                            border:1px solid {BORDER_COLOR};
-                            margin-bottom:5px;
-                        ">
-                            <span style="font-size:1.3rem;">{file_icon(of.name)}</span>
-                            <div style="flex:1;">
-                                <div style="font-size:0.88rem; font-weight:500; color:{TEXT_DARK};">{of.name}</div>
-                                <div style="font-size:0.75rem; color:{TEXT_LIGHT};">{size_str}</div>
-                            </div>
+                # ── Other files (display only, no individual download) ──
+                for of in others:
+                    size_kb = round(of.stat().st_size / 1024, 1)
+                    size_str = f"{size_kb} KB" if size_kb < 1024 else f"{round(size_kb / 1024, 1)} MB"
+                    st.markdown(f"""
+                    <div style="
+                        display:flex; align-items:center; gap:10px;
+                        padding:7px 10px;
+                        background:#faf8f2; border-radius:8px;
+                        border:1px solid {BORDER_COLOR};
+                        margin-bottom:5px;
+                    ">
+                        <span style="font-size:1.3rem;">{file_icon(of.name)}</span>
+                        <div style="flex:1;">
+                            <div style="font-size:0.88rem; font-weight:500; color:{TEXT_DARK};">{of.name}</div>
+                            <div style="font-size:0.75rem; color:{TEXT_LIGHT};">{size_str}</div>
                         </div>
-                        """, unsafe_allow_html=True)
+                    </div>
+                    """, unsafe_allow_html=True)
 
-                    st.markdown("<div style='margin-bottom:1.2rem;'></div>", unsafe_allow_html=True)
+                st.markdown("<div style='margin-bottom:1.2rem;'></div>", unsafe_allow_html=True)
 
     if not any_files:
         st.info("No files uploaded for this project yet.")
